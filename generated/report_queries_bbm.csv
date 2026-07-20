@@ -1,0 +1,82 @@
+report_page,report_code,report_type,report_desc,business_unit,page_code,report_page_desc,dataset_id,dax_query,currency,is_active
+BBM,P06VALL-VCYTRCY,VCYTCY,"BBM Sales and Target by AREA, GROUP and Business Unit",BAUSCH & LOMB,BBM-reports,BAUSCH & LOMB target planning matrix,26e3306d-333c-4383-89b1-736498c0e29e,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Item Family Code'[ItemFamilyCode (groups)],
+  'UBussiness'[BusinessUnit],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] IN {""BAUSCH & LOMB"", ""BVI"", ""MORIA""}),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""REPORT_CODE"", ""P06VALL-VCYTRCY"",
+  ""REPORT_DESC"", ""BBM Sales and Target by AREA, GROUP and Business Unit"",
+  ""VCY"", [Sales],
+  ""TCY"", [Target Triplex BBM API]
+)
+VAR __Filtered = FILTER(__Base, NOT(ISBLANK([VCY])) || NOT(ISBLANK([TCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Item Family Code'[ItemFamilyCode (groups)],
+  ""Group2"", 'UBussiness'[BusinessUnit],
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY]
+)
+ORDER BY [SellerCode], [Group1], [Group2], [Month]",1,true
+BBM,P06VALL-VLY,VLY,"BBM Sales by AREA, GROUP and Business Unit",BAUSCH & LOMB,BBM-reports,BAUSCH & LOMB target planning matrix,26e3306d-333c-4383-89b1-736498c0e29e,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Item Family Code'[ItemFamilyCode (groups)],
+  'UBussiness'[BusinessUnit],
+  'U Months'[Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] IN {""BAUSCH & LOMB"", ""BVI"", ""MORIA""}),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""REPORT_CODE"", ""P06VALL-VLY"",
+  ""REPORT_DESC"", ""BBM Sales by AREA, GROUP and Business Unit"",
+  ""VCY"", [Sales LY]
+)
+VAR __Filtered = FILTER(__Base, NOT(ISBLANK([VCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Item Family Code'[ItemFamilyCode (groups)],
+  ""Group2"", 'UBussiness'[BusinessUnit],
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""VLY"", [VCY]
+)
+ORDER BY [SellerCode], [Group1], [Group2], [Month]",1,true
+BBM,P06VALL-VTREND,VTREND,"BBM Sales Trend by AREA, GROUP and Business Unit",BAUSCH & LOMB,BBM-reports,BAUSCH & LOMB target planning matrix,26e3306d-333c-4383-89b1-736498c0e29e,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Item Family Code'[ItemFamilyCode (groups)],
+  'UBussiness'[BusinessUnit],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] IN {""BAUSCH & LOMB"", ""BVI"", ""MORIA""}),
+  ""REPORT_CODE"", ""P06VALL-VTREND"",
+  ""REPORT_DESC"", ""BBM Sales Trend by AREA, GROUP and Business Unit"",
+  ""VTrend"", [Sales Trend B&L],
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, NOT(ISBLANK([VTrend])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Item Family Code'[ItemFamilyCode (groups)],
+  ""Group2"", 'UBussiness'[BusinessUnit],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""VTrend"", [VTrend],
+  ""CURRENCY"", [CURRENCY]
+)
+ORDER BY [SellerCode], [Group1], [Group2]",1,true

@@ -4,7 +4,7 @@ import type {
   AuthMeSuccess,
   LoginApiResponse,
   LoginSuccess,
-} from "@/types/auth";
+} from "@/lib/types/auth";
 
 export async function fetchAuthMe(): Promise<AuthMeSuccess> {
   const response = await apiClient.get<AuthMeResponse>("/api/auth/me", {

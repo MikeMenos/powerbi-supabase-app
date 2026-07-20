@@ -1,0 +1,183 @@
+report_page,report_code,report_type,report_desc,business_unit,page_code,report_page_desc,dataset_id,dax_query,currency,is_active
+AMOENA,P03V01-VCYTCY,VCYTCY,AMOENA ,AMOENA,amoena-reports,AMOENA target planning matrix,3703e49b-ad53-4001-8b5e-2374268d1483,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Trade Family AMOENA'[Trader Family AMOENA],
+  'Ua1'[UNR],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""AMOENA""),
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group2"", ""SALES"",
+  ""REPORT_CODE"", ""P03V01-VCYTCY"",
+  ""REPORT_DESC"", ""AMOENA "",
+  ""VCY"", [Sales],
+  ""TCY"", ROUND([Sales Target Amoena], 0),
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [TCY] > 0 && NOT(ISBLANK([TCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Trade Family AMOENA'[Trader Family AMOENA],
+  ""Group2"", [Group2],
+  ""Group3"", IF('U Trade Family AMOENA'[Trader Family AMOENA] = ""Individuals"", 'Ua1'[UNR], ""ALL""),
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY],
+  ""CURRENCY"", [CURRENCY]
+)
+ORDER BY [SellerCode], [Group1], [Group3], [Month]",1,true
+AMOENA,P03V01-VLY,VLY,AMOENA ,AMOENA,amoena-reports,AMOENA target planning matrix,3a917ebc-e44b-4f6c-8b4a-26a76d9b6e02,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Trade Family AMOENA'[Trader Family AMOENA],
+  'Ua1'[UNR],
+  'U Months'[Month],
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""AMOENA""),
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""Group2"", ""SALES"",
+  ""REPORT_CODE"", ""P03V01-VLY"",
+  ""REPORT_DESC"", ""AMOENA "",
+  ""VLY"", [Sales],
+  ""TargetFilter"", [Sales Target Amoena],
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [VLY] > 0 && NOT(ISBLANK([VLY])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Trade Family AMOENA'[Trader Family AMOENA],
+  ""Group2"", [Group2],
+  ""Group3"", IF('U Trade Family AMOENA'[Trader Family AMOENA] = ""Individuals"", 'Ua1'[UNR], ""ALL""),
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""VLY"", [VLY],
+  ""CURRENCY"", [CURRENCY]
+)
+ORDER BY [SellerCode], [Group1], [Group3], [Month]",1,true
+AMOENA,P03V01-VTREND,VTREND,AMOENA ,AMOENA,amoena-reports,AMOENA target planning matrix,3703e49b-ad53-4001-8b5e-2374268d1483,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Trade Family AMOENA'[Trader Family AMOENA],
+  'Ua1'[UNR],
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""AMOENA""),
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group2"", ""SALES"",
+  ""REPORT_CODE"", ""P03V01-VTREND"",
+  ""REPORT_DESC"", ""AMOENA "",
+  ""VTREND"", ROUND([Sales Trend], 0),
+  ""TargetFilter"", [Sales Target Amoena],
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [VTREND] > 0 && NOT(ISBLANK([VTREND])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Trade Family AMOENA'[Trader Family AMOENA],
+  ""Group2"", [Group2],
+  ""Group3"", IF('U Trade Family AMOENA'[Trader Family AMOENA] = ""Individuals"", 'Ua1'[UNR], ""ALL""),
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""VTREND"", [VTREND],
+  ""CURRENCY"", [CURRENCY]
+)
+ORDER BY [SellerCode], [Group1], [Group3]",1,true
+AMOENA,P03V02-VCYTCY,VCYTCY,AMOENA ,AMOENA,amoena-reports,AMOENA target planning matrix,3703e49b-ad53-4001-8b5e-2374268d1483,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'Ua1'[UNR],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""AMOENA""),
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group2"", ""ΠΕΡΙΣΤΑΤΙΚΑ"",
+  ""REPORT_CODE"", ""P03V02-VCYTCY"",
+  ""REPORT_DESC"", ""AMOENA "",
+  ""VCY"", [% Cover PER Amoena],
+  ""TCY"", ROUND([PER Target Amoena], 0),
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [TCY] > 0 && NOT(ISBLANK([TCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'Ua1'[UNR],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY],
+  ""CURRENCY"", [CURRENCY]
+)
+ORDER BY [SellerCode], [Group1], [Month]",0,true
+AMOENA,P03V02-VLY,VLY,AMOENA ,AMOENA,amoena-reports,AMOENA target planning matrix,3a917ebc-e44b-4f6c-8b4a-26a76d9b6e02,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'Ua1'[UNR],
+  'U Months'[Month],
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""AMOENA""),
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""Group2"", ""ΠΕΡΙΣΤΑΤΙΚΑ"",
+  ""REPORT_CODE"", ""P03V02-VLY"",
+  ""REPORT_DESC"", ""AMOENA "",
+  ""VLY"", [% Cover PER Amoena],
+  ""TargetFilter"", [PER Target Amoena],
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [VLY] > 0 && NOT(ISBLANK([VLY])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'Ua1'[UNR],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""VLY"", [VLY],
+  ""CURRENCY"", [CURRENCY]
+)
+ORDER BY [SellerCode], [Group1], [Month]",0,true
+AMOENA,P03V02-VTREND,VTREND,AMOENA ,AMOENA,amoena-reports,AMOENA target planning matrix,3703e49b-ad53-4001-8b5e-2374268d1483,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'Ua1'[UNR],
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""AMOENA""),
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group2"", ""ΠΕΡΙΣΤΑΤΙΚΑ"",
+  ""REPORT_CODE"", ""P03V02-VTREND"",
+  ""REPORT_DESC"", ""AMOENA "",
+  ""VTREND"", ROUND([% Cover PER Amoena], 0),
+  ""TargetFilter"", [PER Target Amoena],
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [VTREND] > 0 && NOT(ISBLANK([VTREND])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'Ua1'[UNR],
+  ""Group2"", [Group2],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""VTREND"", [VTREND],
+  ""CURRENCY"", [CURRENCY]
+)
+ORDER BY [SellerCode], [Group1]",0,true

@@ -1,0 +1,535 @@
+report_page,report_code,report_type,report_desc,business_unit,page_code,report_page_desc,dataset_id,dax_query,currency,is_active
+COLOPLAST,P01V01-VCYTCY,VCYTCY,COMFEEL ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group1"", ""NEW"",
+  ""Group2"", ""COMFEEL"",
+  ""REPORT_CODE"", ""P01V01-VCYTCY"",
+  ""REPORT_DESC"", ""COMFEEL "",
+  ""VCY"", [WC NEW PER],
+  ""TCY"", ROUND([NEW Total PER Target], 0),
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [TCY] > 0 && NOT(ISBLANK([TCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY]
+)
+ORDER BY [SellerCode], [Month]",0,true
+COLOPLAST,P01V01-VLY,VLY,COMFEEL ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""Group1"", ""NEW"",
+  ""Group2"", ""COMFEEL"",
+  ""REPORT_CODE"", ""P01V01-VLY"",
+  ""REPORT_DESC"", ""COMFEEL "",
+  ""VLY"", [WC NEW PER],
+  ""TargetFilter"", [NEW Total PER Target],
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [VLY] > 0 && NOT(ISBLANK([VLY])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VLY"", [VLY]
+)
+ORDER BY [SellerCode], [Month]",0,true
+COLOPLAST,P01V01-VTREND,VTREND,COMFEEL ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,e928997c-ad45-4320-a7d6-b35a8fa8e510,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group1"", ""NEW"",
+  ""Group2"", ""COMFEEL"",
+  ""REPORT_CODE"", ""P01V01-VTREND"",
+  ""REPORT_DESC"", ""COMFEEL "",
+  ""VTREND"", ROUND([NEW Total PER Forecast], 0),
+  ""TargetFilter"", [NEW Total PER Target],
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [VTREND] > 0 && NOT(ISBLANK([VTREND])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VTrend"", [VTREND]
+)
+ORDER BY [SellerCode]",0,true
+COLOPLAST,P01V03-VCYTCY,VCYTCY,Hospital ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  'U HOSPITAL SUBS'[Κατηγορία],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  TREATAS({""1.TRAUMA"", ""2.OSTOMIES"", ""3.CATHETERS""}, 'U HOSPITAL SUBS'[Κατηγορία]),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group2"", ""HOSPITAL"",
+  ""REPORT_CODE"", ""P01V03-VCYTCY"",
+  ""REPORT_DESC"", ""Hospital "",
+  ""VCY"", [HOSPITAL SALES],
+  ""TCY"", ROUND([HOSPITAL TARGET], 0),
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [TCY] > 0 && NOT(ISBLANK([TCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U HOSPITAL SUBS'[Κατηγορία],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY]
+)
+ORDER BY [SellerCode], [Month]",1,true
+COLOPLAST,P01V03-VLY,VLY,Hospital ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,5f39f3a4-1245-4510-bbb3-c20b394afd7f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  'U HOSPITAL SUBS'[Κατηγορία],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  TREATAS({""1.TRAUMA"", ""2.OSTOMIES"", ""3.CATHETERS""}, 'U HOSPITAL SUBS'[Κατηγορία]),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""Group2"", ""HOSPITAL"",
+  ""REPORT_CODE"", ""P01V03-VLY"",
+  ""REPORT_DESC"", ""Hospital "",
+  ""VLY"", [HOSPITAL SALES],
+  ""TargetFilter"", [HOSPITAL TARGET],
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [VLY] > 0 && NOT(ISBLANK([VLY])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U HOSPITAL SUBS'[Κατηγορία],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VLY"", [VLY]
+)
+ORDER BY [SellerCode], [Month]",1,true
+COLOPLAST,P01V03-VTREND,VTREND,Hospital ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U HOSPITAL SUBS'[Κατηγορία],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  TREATAS({""1.TRAUMA"", ""2.OSTOMIES"", ""3.CATHETERS""}, 'U HOSPITAL SUBS'[Κατηγορία]),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group2"", ""HOSPITAL"",
+  ""REPORT_CODE"", ""P01V03-VTREND"",
+  ""REPORT_DESC"", ""Hospital "",
+  ""VTREND"", ROUND([Hospital Forecast], 0),
+  ""TargetFilter"", [HOSPITAL TARGET],
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [VTREND] > 0 && NOT(ISBLANK([VTREND])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U HOSPITAL SUBS'[Κατηγορία],
+  ""Group2"", [Group2],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VTrend"", [VTREND]
+)
+ORDER BY [SellerCode]",1,true
+COLOPLAST,P01V04-VCYTCY,VCYTCY,GENADYNE ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""GENADYNE""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group1"", ""GENADYNE"",
+  ""Group2"", ""GENADYNE"",
+  ""REPORT_CODE"", ""P01V04-VCYTCY"",
+  ""REPORT_DESC"", ""GENADYNE "",
+  ""VCY"", [GENADYNE TARGET SALES],
+  ""TCY"", ROUND([GENADYNE TARGET SALES], 0),
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [TCY] > 0 && NOT(ISBLANK([TCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY]
+)
+ORDER BY [SellerCode], [Month]",1,true
+COLOPLAST,P01V04-VLY,VLY,GENADYNE ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,5f39f3a4-1245-4510-bbb3-c20b394afd7f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""GENADYNE""),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""Group1"", ""GENADYNE"",
+  ""Group2"", ""GENADYNE"",
+  ""REPORT_CODE"", ""P01V04-VLY"",
+  ""REPORT_DESC"", ""GENADYNE "",
+  ""VLY"", [GENADYNE TARGET SALES],
+  ""TargetFilter"", [GENADYNE TARGET SALES],
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [VLY] > 0 && NOT(ISBLANK([VLY])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VLY"", [VLY]
+)
+ORDER BY [SellerCode], [Month]",1,true
+COLOPLAST,P01V04-VTREND,VTREND,GENADYNE ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""GENADYNE""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group1"", ""GENADYNE"",
+  ""Group2"", ""GENADYNE"",
+  ""REPORT_CODE"", ""P01V04-VTREND"",
+  ""REPORT_DESC"", ""GENADYNE "",
+  ""VTREND"", ROUND([GENADYNE Forecast], 0),
+  ""TargetFilter"", [GENADYNE TARGET SALES],
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [VTREND] > 0 && NOT(ISBLANK([VTREND])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VTrend"", [VTREND]
+)
+ORDER BY [SellerCode]",1,true
+COLOPLAST,P01V05-VCYTCY,VCYTCY,UNO ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""GENADYNE""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group1"", ""UNO"",
+  ""Group2"", ""UNO"",
+  ""REPORT_CODE"", ""P01V05-VCYTCY"",
+  ""REPORT_DESC"", ""UNO "",
+  ""VCY"", [UNO Sales],
+  ""TCY"", ROUND([UNO Target Sales], 0),
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [TCY] > 0 && NOT(ISBLANK([TCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY]
+)
+ORDER BY [SellerCode], [Month]",1,true
+COLOPLAST,P01V05-VLY,VLY,UNO ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,5f39f3a4-1245-4510-bbb3-c20b394afd7f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""GENADYNE""),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""Group1"", ""UNO"",
+  ""Group2"", ""UNO"",
+  ""REPORT_CODE"", ""P01V05-VLY"",
+  ""REPORT_DESC"", ""UNO "",
+  ""VLY"", [UNO Sales],
+  ""TargetFilter"", [UNO Target Sales],
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [VLY] > 0 && NOT(ISBLANK([VLY])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VLY"", [VLY]
+)
+ORDER BY [SellerCode], [Month]",1,true
+COLOPLAST,P01V05-VTREND,VTREND,UNO ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""GENADYNE""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group1"", ""UNO"",
+  ""Group2"", ""UNO"",
+  ""REPORT_CODE"", ""P01V05-VTREND"",
+  ""REPORT_DESC"", ""UNO "",
+  ""VTREND"", ROUND([UNO Forecast], 0),
+  ""TargetFilter"", [UNO Target Sales],
+  ""CURRENCY"", 1
+)
+VAR __Filtered = FILTER(__Base, [VTREND] > 0 && NOT(ISBLANK([VTREND])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VTrend"", [VTREND]
+)
+ORDER BY [SellerCode]",1,true
+COLOPLAST,P01V06-VCYTCY,VCYTCY,Oncology ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  'U OC'[OC GROUP],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  FILTER('U OC', 'U OC'[OC GROUP] IN {""KS"", ""LOIP"", ""NEF"", ""OURAMF""}),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group2"", ""STOMIES"",
+  ""REPORT_CODE"", ""P01V06-VCYTCY"",
+  ""REPORT_DESC"", ""Oncology "",
+  ""VCY"", [OC PER],
+  ""TCY"", ROUND([OC PER TARGET], 0),
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [TCY] > 0 && NOT(ISBLANK([TCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", IF('U OC'[OC GROUP] = ""OURAMF"", ""KS"", 'U OC'[OC GROUP]),
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY]
+)
+ORDER BY [SellerCode], [Month]",0,true
+COLOPLAST,P01V06-VLY,VLY,Oncology ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,5f39f3a4-1245-4510-bbb3-c20b394afd7f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  'U OC'[OC GROUP],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  FILTER('U OC', 'U OC'[OC GROUP] IN {""KS"", ""LOIP"", ""NEF"", ""OURAMF""}),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""Group2"", ""STOMIES"",
+  ""REPORT_CODE"", ""P01V06-VLY"",
+  ""REPORT_DESC"", ""Oncology "",
+  ""VLY"", [OC PER],
+  ""TargetFilter"", [OC PER TARGET],
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [VLY] > 0 && NOT(ISBLANK([VLY])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", IF('U OC'[OC GROUP] = ""OURAMF"", ""KS"", 'U OC'[OC GROUP]),
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VLY"", [VLY]
+)
+ORDER BY [SellerCode], [Month]",0,true
+COLOPLAST,P01V06-VTREND,VTREND,Oncology ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U OC'[OC GROUP],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  FILTER('U OC', 'U OC'[OC GROUP] IN {""KS"", ""LOIP"", ""NEF"", ""OURAMF""}),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group2"", ""STOMIES"",
+  ""REPORT_CODE"", ""P01V06-VTREND"",
+  ""REPORT_DESC"", ""Oncology "",
+  ""VTREND"", ROUND([OC PER FORECAST], 0),
+  ""TargetFilter"", [OC PER TARGET],
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [VTREND] > 0 && NOT(ISBLANK([VTREND])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", IF('U OC'[OC GROUP] = ""OURAMF"", ""KS"", 'U OC'[OC GROUP]),
+  ""Group2"", [Group2],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VTrend"", [VTREND]
+)
+ORDER BY [SellerCode]",0,true
+COLOPLAST,P1V2-VCYTCY,VCYTCY,COMFEEL ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group1"", ""EKTEL"",
+  ""Group2"", ""COMFEEL"",
+  ""REPORT_CODE"", ""P1V2-VCYTCY"",
+  ""REPORT_DESC"", ""COMFEEL "",
+  ""VCY"", [WC EKTEL],
+  ""TCY"", ROUND([ACTUAL TARGET], 0),
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [TCY] > 0 && NOT(ISBLANK([TCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY]
+)
+ORDER BY [SellerCode], [Month]",0,true
+COLOPLAST,P1V2-VLY,VLY,COMFEEL ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,5f39f3a4-1245-4510-bbb3-c20b394afd7f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Months'[Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""Group1"", ""EKTEL"",
+  ""Group2"", ""COMFEEL"",
+  ""REPORT_CODE"", ""P1V2-VLY"",
+  ""REPORT_DESC"", ""COMFEEL "",
+  ""VLY"", [WC EKTEL],
+  ""TargetFilter"", [ACTUAL TARGET],
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [VLY] > 0 && NOT(ISBLANK([VLY])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VLY"", [VLY]
+)
+ORDER BY [SellerCode], [Month]",0,true
+COLOPLAST,P1V2-VTREND,VTREND,COMFEEL ,COLOPLAST,coloplast-reports,COLOPLAST target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('UBussiness', 'UBussiness'[BusinessUnit] = ""COLOPLAST""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""Group1"", ""EKTEL"",
+  ""Group2"", ""COMFEEL"",
+  ""REPORT_CODE"", ""P1V2-VTREND"",
+  ""REPORT_DESC"", ""COMFEEL "",
+  ""VTREND"", ROUND([EKTEL Total PER Forecast], 0),
+  ""TargetFilter"", [ACTUAL TARGET],
+  ""CURRENCY"", 0
+)
+VAR __Filtered = FILTER(__Base, [VTREND] > 0 && NOT(ISBLANK([VTREND])) && [TargetFilter] > 1 && NOT(ISBLANK([TargetFilter])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", [Group1],
+  ""Group2"", [Group2],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [CURRENCY],
+  ""VTrend"", [VTREND]
+)
+ORDER BY [SellerCode]",0,true

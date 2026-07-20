@@ -10,7 +10,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase";
 import type {
   InitializationResult,
   InitializationStatus,
-} from "@/types/initialization";
+} from "@/lib/types/initialization";
 
 let activeInitialization: Promise<InitializationResult> | null = null;
 

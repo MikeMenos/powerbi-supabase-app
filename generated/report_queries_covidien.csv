@@ -1,0 +1,93 @@
+report_page,report_code,report_type,report_desc,business_unit,page_code,report_page_desc,dataset_id,dax_query,currency,is_active
+COVIDIEN,P07VALL-VCYTRCY,VCYTCY,"Covidien Sales and Target by AREA, GROUP and Business Unit",COVIDIEN,covidien-reports,COVIDIEN target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Family'[Family Group],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('U Family', 'U Family'[Family Group] IN {""1.STAPLING"", ""2.LAPAROSCOPY"", ""3.EBD"", ""4.MESH"", ""5.SUTURES"", ""6.SONI 7""}),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""REPORT_CODE"", ""P07VALL-VCYTRCY"",
+  ""REPORT_DESC"", ""Covidien Sales and Target by AREA, GROUP and Business Unit"",
+  ""Currency"", 1,
+  ""VCY"", CALCULATE([Sales PROCON], ASP_EBS_SALES[BusinessUnit] = ""COVIDIEN"", NOT(ASP_EBS_SALES[DocumentType] IN {""ΔΕΑΝ - Δελτίο Ποσοτικής Παραλαβής"", ""ΔΧΓ - Δελτίο Αποστολής"", ""ΔΧΔ - Δελτίο Αποστολής (χωρίς αξία)""})),
+  ""TCY"", [Covidien Sales Target]
+)
+VAR __Filtered = FILTER(__Base, NOT(ISBLANK([VCY])) || NOT(ISBLANK([TCY])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Family'[Family Group],
+  ""Group2"", ""COVIDIEN"",
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [Currency],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY]
+)
+ORDER BY [SellerCode], [Group1], [Month]",1,true
+COVIDIEN,P07VALL-VLY,VLY,"Covidien Sales and Target by AREA, GROUP and Business Unit LY",COVIDIEN,covidien-reports,COVIDIEN target planning matrix,5f39f3a4-1245-4510-bbb3-c20b394afd7f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[Area],
+  'U Sales Person'[Team],
+  'U Sales Person'[SellerCode],
+  'U Sales Person'[Πωλητής],
+  'U Family'[Family Group],
+  'U Months'[Month],
+  FILTER('U Family', 'U Family'[Family Group] IN {""1.STAPLING"", ""2.LAPAROSCOPY"", ""3.EBD"", ""4.MESH"", ""5.SUTURES"", ""6.SONI 7""}),
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""REPORT_CODE"", ""P07VALL-VLY"",
+  ""REPORT_DESC"", ""Covidien Sales and Target by AREA, GROUP and Business Unit LY"",
+  ""Currency"", 1,
+  ""VLY"", CALCULATE([Sales PROCON], ASP_EBS_SALES[BusinessUnit] = ""COVIDIEN"", NOT(ASP_EBS_SALES[DocumentType] IN {""ΔΕΑΝ - Δελτίο Ποσοτικής Παραλαβής"", ""ΔΧΓ - Δελτίο Αποστολής"", ""ΔΧΔ - Δελτίο Αποστολής (χωρίς αξία)""}))
+)
+VAR __Filtered = FILTER(__Base, [VLY] > 0)
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""Area"", 'U Sales Person'[Area],
+  ""Team"", 'U Sales Person'[Team],
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""SellerName"", 'U Sales Person'[Πωλητής],
+  ""Group1"", 'U Family'[Family Group],
+  ""Group2"", ""COVIDIEN"",
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [Currency],
+  ""VLY"", [VLY]
+)
+ORDER BY [Area], [Team], [SellerName], [Group1], [Month]",1,true
+COVIDIEN,P07VALL-VTREND,VTREND,Covidien Sales Trend by AREA and by GROUP,COVIDIEN,covidien-reports,COVIDIEN target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[Area],
+  'U Sales Person'[Team],
+  'U Sales Person'[SellerCode],
+  'U Family'[Family Group],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('U Family', 'U Family'[Family Group] IN {""1.STAPLING"", ""2.LAPAROSCOPY"", ""3.EBD"", ""4.MESH"", ""5.SUTURES"", ""6.SONI 7""}),
+  ""REPORT_CODE"", ""P07VALL-VTREND"",
+  ""REPORT_DESC"", ""Covidien Sales Trend by AREA and by GROUP"",
+  ""Currency"", 1,
+  ""VTrend"", [Covidien Sales Trend]
+)
+VAR __Filtered = FILTER(__Base, NOT(ISBLANK([VTrend])))
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""Area"", 'U Sales Person'[Area],
+  ""Team"", 'U Sales Person'[Team],
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Family'[Family Group],
+  ""Group2"", ""COVIDIEN"",
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [Currency],
+  ""VTrend"", [VTrend]
+)
+ORDER BY [Area], [Team], [SellerCode], [Group1], [Group2]",1,true

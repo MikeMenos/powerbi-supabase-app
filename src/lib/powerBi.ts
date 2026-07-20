@@ -2,16 +2,12 @@ import "server-only";
 
 import axios from "axios";
 
-import type { LoginResponse } from "@/types/auth";
-import type { PowerBiDataset, PowerBiGroup } from "@/types/powerBi";
-
-type AmsaPowerBiTokenResponse = {
-  statusCode?: number;
-  message?: string;
-  detailedMessage?: string;
-  token?: string;
-  token_data?: string;
-};
+import type { LoginResponse } from "@/lib/types/auth";
+import type {
+  AmsaPowerBiTokenResponse,
+  PowerBiDataset,
+  PowerBiGroup,
+} from "@/lib/types/powerBi";
 
 function getAmsaBaseUrl() {
   const baseUrl = process.env.AMSA_API_BASE_URL?.trim();

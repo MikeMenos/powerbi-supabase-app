@@ -1,0 +1,93 @@
+report_page,report_code,report_type,report_desc,business_unit,page_code,report_page_desc,dataset_id,dax_query,currency,is_active
+PORGES,P05VALL-VCYTCY,VCYTCY,"Porges Sales, Target and Trend by Sales Person and Group",PORGES,porges-reports,PORGES target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Item Family Code'[Porges Group],
+  'U Item Family Code'[Porges SUB],
+  'U Item Family Code'[ItemFamilyCode (groups)],
+  'U Months'[Month],
+  'U Months'[Status of Closed Month],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""REPORT_CODE"", ""P05VALL-VCYTCY"",
+  ""REPORT_DESC"", ""Porges Sales, Target and Trend by Sales Person and Group"",
+  ""Currency"", 1,
+  ""VCY"", [Sales],
+  ""TCY"", [SALES TARGET PORGES]
+)
+VAR __Filtered = FILTER(__Base, [TCY] > 0)
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Item Family Code'[Porges Group],
+  ""Group2"", 'U Item Family Code'[Porges SUB],
+  ""Group3"", 'U Item Family Code'[ItemFamilyCode (groups)],
+  ""Month"", 'U Months'[Month],
+  ""ClosedMonthStatus"", 'U Months'[Status of Closed Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [Currency],
+  ""VCY"", [VCY],
+  ""TCY"", [TCY]
+)
+ORDER BY [SellerCode], [Group1], [Group2], [Group3], [Month]",1,true
+PORGES,P05VALL-VLY,VLY,Porges Sales by Sales Person and Group LY,PORGES,porges-reports,PORGES target planning matrix,5f39f3a4-1245-4510-bbb3-c20b394afd7f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Item Family Code'[Porges Group],
+  'U Item Family Code'[Porges SUB],
+  'U Item Family Code'[ItemFamilyCode (groups)],
+  'U Months'[Month],
+  'UBussiness'[BusinessUnit],
+  FILTER(ALL('U Sales Person'), [SALES TARGET PORGES] > 0),
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('Calendar', 'Calendar'[Year] = {COMPARE_YEAR}),
+  ""REPORT_CODE"", ""P05VALL-VLY"",
+  ""REPORT_DESC"", ""Porges Sales by Sales Person and Group LY"",
+  ""Currency"", 1,
+  ""VCY"", [Sales]
+)
+VAR __Filtered = FILTER(__Base, [VCY] > 0 && 'UBussiness'[BusinessUnit] = ""Porges"")
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Item Family Code'[Porges Group],
+  ""Group2"", 'U Item Family Code'[Porges SUB],
+  ""Group3"", 'U Item Family Code'[ItemFamilyCode (groups)],
+  ""Month"", 'U Months'[Month],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [Currency],
+  ""VLY"", [VCY]
+)
+ORDER BY [SellerCode], [Group1], [Group2], [Group3], [Month]",1,true
+PORGES,P05VALL-VTREND,VTREND,"Porges Sales, Target and Trend by Sales Person and Group",PORGES,porges-reports,PORGES target planning matrix,8dcec3c5-33d2-445f-9c1b-fa934a3eec1f,"DEFINE
+VAR __Base = SUMMARIZECOLUMNS(
+  'U Sales Person'[SellerCode],
+  'U Item Family Code'[Porges Group],
+  'U Item Family Code'[Porges SUB],
+  'U Item Family Code'[ItemFamilyCode (groups)],
+  FILTER('U Sales Person', 'U Sales Person'[Area] = ""{AREA}""),
+  FILTER('Calendar', 'Calendar'[Year] = {CURRENT_YEAR}),
+  ""REPORT_CODE"", ""P05VALL-VTREND"",
+  ""REPORT_DESC"", ""Porges Sales, Target and Trend by Sales Person and Group"",
+  ""Currency"", 1,
+  ""TCY"", [SALES TARGET PORGES],
+  ""VTrend"", [Sales Trend]
+)
+VAR __Filtered = FILTER(__Base, [TCY] > 0)
+EVALUATE
+SELECTCOLUMNS(
+  __Filtered,
+  ""SellerCode"", 'U Sales Person'[SellerCode],
+  ""Group1"", 'U Item Family Code'[Porges Group],
+  ""Group2"", 'U Item Family Code'[Porges SUB],
+  ""Group3"", 'U Item Family Code'[ItemFamilyCode (groups)],
+  ""REPORT_CODE"", [REPORT_CODE],
+  ""REPORT_DESC"", [REPORT_DESC],
+  ""Currency"", [Currency],
+  ""VTrend"", [VTrend]
+)
+ORDER BY [SellerCode], [Group1], [Group2], [Group3]",1,true

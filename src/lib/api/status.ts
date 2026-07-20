@@ -2,7 +2,7 @@ import { apiClient, unwrapApiResponse } from "@/lib/api/client";
 import type {
   InitializationStatus,
   InitializationStatusResponse,
-} from "@/types/initialization";
+} from "@/lib/types/initialization";
 
 export async function fetchInitializationStatus(): Promise<InitializationStatus> {
   const response = await apiClient.get<InitializationStatusResponse>(

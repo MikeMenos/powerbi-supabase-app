@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { ApiUserInfo, SessionUserInfo } from "@/types/auth";
+import type { ApiUserInfo, SessionUserInfo } from "@/lib/types/auth";
 
 export const cookieName = "session-colai";
 export const userCookieName = "amsa_user";

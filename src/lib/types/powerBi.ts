@@ -19,3 +19,11 @@ export type PowerBiDataset = {
   targetStorageMode?: string;
   createdDate?: string;
 };
+
+export type AmsaPowerBiTokenResponse = {
+  statusCode?: number;
+  message?: string;
+  detailedMessage?: string;
+  token?: string;
+  token_data?: string;
+};

@@ -1,4 +1,4 @@
-import type { InitializationResult } from "@/types/initialization";
+import type { InitializationResult } from "@/lib/types/initialization";
 
 export type Nullable<T> = T | null;
 
