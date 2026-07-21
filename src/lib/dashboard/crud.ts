@@ -108,7 +108,7 @@ export async function getTableSummaries(): Promise<TableSummaryItem[]> {
       const def = TABLE_CATALOG[id];
       const { count, error } = await supabase
         .from(id)
-        .select("id", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true });
 
       if (error) {
         throw new Error(`Failed to count ${id}: ${error.message}`);

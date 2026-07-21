@@ -2,7 +2,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { tableKeys } from "@/hooks/queryKeys";
+import { initializationKeys, tableKeys } from "@/hooks/queryKeys";
+import { syncPowerBiCatalogRequest } from "@/lib/api/powerbi";
 import {
   addTableColumnRequest,
   createTableRowRequest,
@@ -18,6 +19,15 @@ import type {
   AddColumnRequest,
   DashboardTableId,
 } from "@/lib/dashboard/types/tables";
+
+const POWER_BI_SYNC_TABLES = new Set<DashboardTableId>([
+  "powerbi_groups",
+  "powerbi_datasets",
+]);
+
+export function isPowerBiSyncTable(table: DashboardTableId) {
+  return POWER_BI_SYNC_TABLES.has(table);
+}
 
 export function useTableSummaries(enabled = true) {
   return useQuery({
@@ -127,6 +137,24 @@ export function useDeleteTableColumn(table: DashboardTableId) {
     mutationFn: (column: string) => deleteTableColumnRequest(table, column),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: tableKeys.all });
+    },
+  });
+}
+
+export function useRefreshTable(table: DashboardTableId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      if (isPowerBiSyncTable(table)) {
+        return syncPowerBiCatalogRequest();
+      }
+      return null;
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: tableKeys.all }),
+        queryClient.invalidateQueries({ queryKey: initializationKeys.all }),
+      ]);
     },
   });
 }

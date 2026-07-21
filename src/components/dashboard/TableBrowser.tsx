@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import {
   useLayoutEffect,
   useMemo,
@@ -39,8 +39,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  isPowerBiSyncTable,
   useCreateTableRow,
   useDeleteTableRow,
+  useRefreshTable,
   useTableColumns,
   useTableRows,
   useUpdateTableRow,
@@ -127,6 +129,23 @@ function formatCell(value: unknown): ReactNode {
   return <TruncatedCellValue text={String(value)} />;
 }
 
+function getRowKey(
+  row: TableRow,
+  rowKeyColumns: string[] | undefined,
+  fallback: string,
+) {
+  if (row.id != null) return String(row.id);
+  if (rowKeyColumns?.length) {
+    const composite = rowKeyColumns
+      .map((key) => row[key])
+      .filter((value) => value != null)
+      .map(String)
+      .join("|");
+    if (composite) return composite;
+  }
+  return fallback;
+}
+
 type TableBrowserProps = {
   table: DashboardTableId;
 };
@@ -137,6 +156,9 @@ export function TableBrowser({ table }: TableBrowserProps) {
   const canCreate = def.canCreate !== false;
   const canEdit = def.canEdit !== false;
   const canDelete = def.canDelete !== false;
+  const canManageColumns = def.canManageColumns !== false;
+  const showActions = canEdit || canDelete;
+  const powerBiSync = isPowerBiSyncTable(table);
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -152,6 +174,7 @@ export function TableBrowser({ table }: TableBrowserProps) {
   const createRow = useCreateTableRow(table);
   const updateRow = useUpdateTableRow(table);
   const removeRow = useDeleteTableRow(table);
+  const refreshTable = useRefreshTable(table);
 
   const hiddenKeys = useHiddenColumnKeys(table);
   const pruneStaleKeys = useColumnVisibilityStore(
@@ -235,6 +258,28 @@ export function TableBrowser({ table }: TableBrowserProps) {
     }
   }
 
+  async function handleRefresh() {
+    try {
+      const result = await refreshTable.mutateAsync();
+      if (result) {
+        const added = result.groupsAdded + result.datasetsAdded;
+        toast.success(
+          added > 0
+            ? `Synced ${result.groupsAdded} new group${result.groupsAdded === 1 ? "" : "s"} and ${result.datasetsAdded} new dataset${result.datasetsAdded === 1 ? "" : "s"}.`
+            : "Power BI catalog is up to date.",
+        );
+      } else {
+        toast.success("Table refreshed");
+      }
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, "Refresh failed."));
+    }
+  }
+
+  const columnCount = Math.max(displayColumns.length, 1) + (showActions ? 1 : 0);
+  const isRefreshing =
+    refreshTable.isPending || rowsQuery.isFetching || columnsQuery.isFetching;
+
   return (
     <div className="space-y-4">
       <Card>
@@ -244,12 +289,27 @@ export function TableBrowser({ table }: TableBrowserProps) {
             <CardDescription>{def.description}</CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              aria-label={
+                powerBiSync
+                  ? "Refresh from Power BI"
+                  : "Refresh table"
+              }
+            >
+              <RefreshCw className={isRefreshing ? "animate-spin" : undefined} />
+              Refresh
+            </Button>
             <ColumnVisibilityDialog table={table} columns={listColumns} />
-            <ManageColumnsDialog
-              table={table}
-              columns={schemaColumns}
-              addableTypes={columnsQuery.data?.addableTypes ?? []}
-            />
+            {canManageColumns ? (
+              <ManageColumnsDialog
+                table={table}
+                columns={schemaColumns}
+                addableTypes={columnsQuery.data?.addableTypes ?? []}
+              />
+            ) : null}
             {canCreate ? (
               <Button onClick={openCreate}>
                 <Plus />
@@ -259,7 +319,7 @@ export function TableBrowser({ table }: TableBrowserProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {columnsQuery.data?.schemaRpcReady === false ? (
+          {canManageColumns && columnsQuery.data?.schemaRpcReady === false ? (
             <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
               {columnsQuery.data.schemaRpcHint ??
                 "Schema RPCs are missing. Run the dashboard schema migration in Supabase to enable add/delete column."}
@@ -299,9 +359,11 @@ export function TableBrowser({ table }: TableBrowserProps) {
                       {column.label}
                     </TableHead>
                   ))}
-                  <TableHead className="sticky right-0 z-10 w-[1%] whitespace-nowrap bg-card text-right shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
-                    Actions
-                  </TableHead>
+                  {showActions ? (
+                    <TableHead className="sticky right-0 z-10 w-[1%] whitespace-nowrap bg-card text-right shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
+                      Actions
+                    </TableHead>
+                  ) : null}
                 </UiTableRow>
               </TableHeader>
               <TableBody>
@@ -316,15 +378,17 @@ export function TableBrowser({ table }: TableBrowserProps) {
                           <Skeleton className="h-4 w-24" />
                         </TableCell>
                       ))}
-                      <TableCell className="sticky right-0 bg-card">
-                        <Skeleton className="ml-auto h-8 w-16" />
-                      </TableCell>
+                      {showActions ? (
+                        <TableCell className="sticky right-0 bg-card">
+                          <Skeleton className="ml-auto h-8 w-16" />
+                        </TableCell>
+                      ) : null}
                     </UiTableRow>
                   ))
                 ) : rowsQuery.isError ? (
                   <UiTableRow>
                     <TableCell
-                      colSpan={Math.max(displayColumns.length, 1) + 1}
+                      colSpan={columnCount}
                       className="text-destructive"
                     >
                       {rowsQuery.error instanceof Error
@@ -335,47 +399,52 @@ export function TableBrowser({ table }: TableBrowserProps) {
                 ) : (rowsQuery.data?.rows.length ?? 0) === 0 ? (
                   <UiTableRow>
                     <TableCell
-                      colSpan={Math.max(displayColumns.length, 1) + 1}
+                      colSpan={columnCount}
                       className="text-muted-foreground"
                     >
                       No rows found.
                     </TableCell>
                   </UiTableRow>
                 ) : (
-                  rowsQuery.data?.rows.map((row) => (
-                    <UiTableRow key={String(row.id)} className="group">
+                  rowsQuery.data?.rows.map((row, index) => (
+                    <UiTableRow
+                      key={getRowKey(row, def.rowKeyColumns, `${page}-${index}`)}
+                      className="group"
+                    >
                       {displayColumns.map((column) => (
                         <TableCell key={column.key} className="max-w-[14rem]">
                           {formatCell(row[column.key])}
                         </TableCell>
                       ))}
-                      <TableCell className="sticky right-0 bg-card text-right shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)] group-hover:bg-muted/50">
-                        <div className="inline-flex gap-1">
-                          {canEdit ? (
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => openEdit(row)}
-                              aria-label="Edit row"
-                            >
-                              <Pencil />
-                            </Button>
-                          ) : null}
-                          {canDelete ? (
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => {
-                                setDeleteError(null);
-                                setDeleteRow(row);
-                              }}
-                              aria-label="Delete row"
-                            >
-                              <Trash2 />
-                            </Button>
-                          ) : null}
-                        </div>
-                      </TableCell>
+                      {showActions ? (
+                        <TableCell className="sticky right-0 bg-card text-right shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)] group-hover:bg-muted/50">
+                          <div className="inline-flex gap-1">
+                            {canEdit ? (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => openEdit(row)}
+                                aria-label="Edit row"
+                              >
+                                <Pencil />
+                              </Button>
+                            ) : null}
+                            {canDelete ? (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => {
+                                  setDeleteError(null);
+                                  setDeleteRow(row);
+                                }}
+                                aria-label="Delete row"
+                              >
+                                <Trash2 />
+                              </Button>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                      ) : null}
                     </UiTableRow>
                   ))
                 )}

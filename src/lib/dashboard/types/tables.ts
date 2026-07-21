@@ -3,6 +3,7 @@ export type DashboardTableId =
   | "powerbi_datasets"
   | "report_queries"
   | "sales_snapshots"
+  | "v_available_snapshots"
   | "workbooks"
   | "workbook_pages";
 
@@ -57,6 +58,10 @@ export type TableDef = {
   canEdit?: boolean;
   /** Defaults to true. */
   canDelete?: boolean;
+  /** Defaults to true. Hide manage-columns UI for views. */
+  canManageColumns?: boolean;
+  /** Columns used to build a stable row key when `id` is absent. */
+  rowKeyColumns?: string[];
 };
 
 export type TableRow = Record<string, unknown>;

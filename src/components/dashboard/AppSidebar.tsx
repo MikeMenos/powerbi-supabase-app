@@ -2,6 +2,7 @@
 
 import {
   BookOpen,
+  CalendarDays,
   Code2,
   Database,
   FileText,
@@ -37,6 +38,7 @@ const tableIcons: Record<DashboardTableId, typeof Database> = {
   workbook_pages: FileText,
   report_queries: Code2,
   sales_snapshots: Table2,
+  v_available_snapshots: CalendarDays,
 };
 
 const navItemClassName = cn(

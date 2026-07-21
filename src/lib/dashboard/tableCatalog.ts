@@ -92,6 +92,29 @@ const salesSnapshotsOverrides: ColumnOverride[] = [
   },
 ];
 
+const availableSnapshotsOverrides: ColumnOverride[] = [
+  { key: "snapshot_date", label: "Snapshot date", type: "date", required: true },
+  { key: "snapshot_ts", label: "Snapshot timestamp", type: "datetime" },
+  { key: "username", label: "Username", required: true },
+  { key: "area", label: "Area", required: true },
+  { key: "page_code", label: "Page code", required: true },
+  { key: "report_page", label: "Report page" },
+  {
+    key: "workbook_id",
+    label: "Workbook",
+    type: "fk",
+    fkTable: "workbooks",
+    fkValueKey: "workbook_id",
+    fkLabelKey: "workbook_name",
+  },
+  { key: "year", label: "Year", type: "number" },
+  { key: "closed_period_label", label: "Closed period" },
+  { key: "closed_months_count", label: "Closed months", type: "number" },
+  { key: "last_closed_month", label: "Last closed month" },
+  { key: "open_months_count", label: "Open months", type: "number" },
+  { key: "rows_count", label: "Rows", type: "number" },
+];
+
 const workbooksOverrides: ColumnOverride[] = [
   {
     key: "id",
@@ -151,6 +174,9 @@ export const TABLE_CATALOG: Record<DashboardTableId, TableDef> = {
     description: "Power BI workspaces synced into Supabase.",
     columnOverrides: powerbiGroupsOverrides,
     defaultOrderBy: { column: "name", ascending: true },
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
   },
   powerbi_datasets: {
     id: "powerbi_datasets",
@@ -158,6 +184,9 @@ export const TABLE_CATALOG: Record<DashboardTableId, TableDef> = {
     description: "Datasets linked to workspaces via workspace_id.",
     columnOverrides: powerbiDatasetsOverrides,
     defaultOrderBy: { column: "name", ascending: true },
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
   },
   report_queries: {
     id: "report_queries",
@@ -175,6 +204,18 @@ export const TABLE_CATALOG: Record<DashboardTableId, TableDef> = {
     canCreate: false,
     canEdit: false,
     canDelete: true,
+  },
+  v_available_snapshots: {
+    id: "v_available_snapshots",
+    name: "Available Snapshots",
+    description: "Latest available snapshot summaries by area and page.",
+    columnOverrides: availableSnapshotsOverrides,
+    defaultOrderBy: { column: "snapshot_date", ascending: false },
+    canCreate: false,
+    canEdit: false,
+    canDelete: false,
+    canManageColumns: false,
+    rowKeyColumns: ["area", "page_code", "year", "snapshot_date"],
   },
   workbooks: {
     id: "workbooks",
@@ -200,6 +241,7 @@ export const TABLE_IDS: DashboardTableId[] = [
   "workbook_pages",
   "report_queries",
   "sales_snapshots",
+  "v_available_snapshots",
 ];
 
 export function isDashboardTableId(value: string): value is DashboardTableId {

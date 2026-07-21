@@ -63,7 +63,7 @@ export function ColumnVisibilityDialog({
           ) : null}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Column visibility</DialogTitle>
           <DialogDescription>
