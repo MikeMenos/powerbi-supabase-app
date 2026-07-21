@@ -38,34 +38,35 @@
 }
 
 :root {
-  --background: #f7f8fb;
-  --foreground: #172033;
+  /* Mavrogenis brand (mavrogenis.com): #144196 blue, #40BEA9 teal */
+  --background: #f3f6fe;
+  --foreground: #212529;
   --card: #ffffff;
-  --card-foreground: #172033;
-  --primary: #1769e0;
+  --card-foreground: #212529;
+  --primary: #144196;
   --primary-foreground: #ffffff;
-  --secondary: #eef2f7;
-  --secondary-foreground: #172033;
-  --muted: #eef2f7;
-  --muted-foreground: #667085;
-  --accent: #eef5ff;
-  --accent-foreground: #172033;
+  --secondary: #ededed;
+  --secondary-foreground: #212529;
+  --muted: #e8eef9;
+  --muted-foreground: #657c95;
+  --accent: #e8f8f5;
+  --accent-foreground: #0f3478;
   --destructive: #b42318;
   --destructive-foreground: #ffffff;
-  --success: #067647;
+  --success: #40bea9;
   --success-foreground: #ffffff;
-  --border: #d8dee9;
-  --input: #d8dee9;
-  --ring: #1769e0;
+  --border: #d5dde8;
+  --input: #d5dde8;
+  --ring: #144196;
   --radius: 0.5rem;
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: #1769e0;
+  --sidebar: #272f3f;
+  --sidebar-foreground: #9da6b8;
+  --sidebar-primary: #415cd6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eef5ff;
-  --sidebar-accent-foreground: #172033;
-  --sidebar-border: #d8dee9;
-  --sidebar-ring: #1769e0;
+  --sidebar-accent: transparent;
+  --sidebar-accent-foreground: #415cd6;
+  --sidebar-border: #3a4458;
+  --sidebar-ring: #415cd6;
 }
 
 * {
@@ -80,9 +81,7 @@ body {
 body {
   margin: 0;
   min-height: 100dvh;
-  background:
-    radial-gradient(circle at top left, rgb(23 105 224 / 12%), transparent 34rem),
-    linear-gradient(180deg, #f7f8fb 0%, #eef2f7 100%);
+  background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;

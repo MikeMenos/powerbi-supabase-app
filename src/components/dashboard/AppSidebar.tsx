@@ -7,17 +7,16 @@ import {
   FileText,
   Home,
   Layers3,
-  LogOut,
   Table2,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo.png";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -27,9 +26,9 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { useLogout } from "@/hooks/useAuth";
 import { TABLE_CATALOG, TABLE_IDS } from "@/lib/dashboard/tableCatalog";
 import type { DashboardTableId } from "@/lib/dashboard/types/tables";
+import { cn } from "@/lib/utils";
 
 const tableIcons: Record<DashboardTableId, typeof Database> = {
   powerbi_groups: Layers3,
@@ -40,34 +39,32 @@ const tableIcons: Record<DashboardTableId, typeof Database> = {
   sales_snapshots: Table2,
 };
 
-type AppSidebarProps = {
-  username?: string | null;
-};
+const navItemClassName = cn(
+  "h-auto py-2 text-[15px] text-[#9DA6B8]",
+  "hover:bg-transparent hover:text-[#415CD6]",
+  "active:bg-transparent active:text-[#415CD6]",
+  "data-[active=true]:bg-transparent data-[active=true]:font-medium data-[active=true]:text-[#415CD6]",
+  "data-[state=open]:hover:bg-transparent data-[state=open]:hover:text-[#415CD6]",
+);
 
-export function AppSidebar({ username }: AppSidebarProps) {
+export function AppSidebar() {
   const pathname = usePathname();
-  const logout = useLogout();
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Database className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Supabase Admin</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    Table dashboard
-                  </span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarHeader className="items-center border-b border-sidebar-border py-4">
+        <Link
+          href="/"
+          className="mx-2 flex w-[calc(100%-1rem)] items-center justify-center rounded-md bg-white px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:mx-0 group-data-[collapsible=icon]:w-auto group-data-[collapsible=icon]:p-1.5"
+          aria-label="Home"
+        >
+          <Image
+            src={logo}
+            alt="Mavrogenis"
+            priority
+            className="h-auto w-[min(160px,100%)] group-data-[collapsible=icon]:w-8"
+          />
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>
@@ -80,6 +77,7 @@ export function AppSidebar({ username }: AppSidebarProps) {
                   asChild
                   isActive={pathname === "/"}
                   tooltip="Home"
+                  className={navItemClassName}
                 >
                   <Link href="/">
                     <Home />
@@ -105,6 +103,7 @@ export function AppSidebar({ username }: AppSidebarProps) {
                       asChild
                       isActive={pathname === href}
                       tooltip={table.name}
+                      className={navItemClassName}
                     >
                       <Link href={href}>
                         <Icon />
@@ -118,28 +117,6 @@ export function AppSidebar({ username }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter>
-        <div className="flex flex-col gap-2 px-2 group-data-[collapsible=icon]:items-center">
-          {username ? (
-            <p className="truncate px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-              Signed in as {username}
-            </p>
-          ) : null}
-          <Button
-            variant="outline"
-            size="sm"
-            className="justify-start group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
-            disabled={logout.isPending}
-            onClick={() => logout.mutate()}
-          >
-            <LogOut />
-            <span className="group-data-[collapsible=icon]:hidden">
-              {logout.isPending ? "Signing out..." : "Logout"}
-            </span>
-          </Button>
-        </div>
-      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );
