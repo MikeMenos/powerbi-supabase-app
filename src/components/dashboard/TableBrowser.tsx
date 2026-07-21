@@ -6,9 +6,11 @@ import {
   useMemo,
   useRef,
   useState,
+  useEffect,
   type ReactNode,
 } from "react";
 
+import { ColumnVisibilityDialog } from "@/components/dashboard/ColumnVisibilityDialog";
 import { ConfirmDeleteDialog } from "@/components/dashboard/ConfirmDeleteDialog";
 import { ManageColumnsDialog } from "@/components/dashboard/ManageColumnsDialog";
 import { RowFormDialog } from "@/components/dashboard/RowFormDialog";
@@ -44,6 +46,7 @@ import {
   useUpdateTableRow,
 } from "@/hooks/useTables";
 import { getApiErrorMessage } from "@/lib/api/client";
+import { filterVisibleListColumns } from "@/lib/dashboard/columnVisibility";
 import {
   getListColumnsFromDefs,
   getTableDef,
@@ -52,6 +55,7 @@ import type {
   DashboardTableId,
   TableRow,
 } from "@/lib/dashboard/types/tables";
+import { useColumnVisibilityStore, useHiddenColumnKeys } from "@/stores/columnVisibilityStore";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 25;
@@ -149,14 +153,31 @@ export function TableBrowser({ table }: TableBrowserProps) {
   const updateRow = useUpdateTableRow(table);
   const removeRow = useDeleteTableRow(table);
 
+  const hiddenKeys = useHiddenColumnKeys(table);
+  const pruneStaleKeys = useColumnVisibilityStore(
+    (state) => state.pruneStaleKeys,
+  );
+
   const schemaColumns = useMemo(
     () => columnsQuery.data?.columns ?? rowsQuery.data?.columns ?? [],
     [columnsQuery.data?.columns, rowsQuery.data?.columns],
   );
-  const displayColumns = useMemo(
+  const listColumns = useMemo(
     () => getListColumnsFromDefs(schemaColumns),
     [schemaColumns],
   );
+  const displayColumns = useMemo(
+    () => filterVisibleListColumns(listColumns, hiddenKeys),
+    [listColumns, hiddenKeys],
+  );
+
+  useEffect(() => {
+    if (listColumns.length === 0) return;
+    pruneStaleKeys(
+      table,
+      listColumns.map((column) => column.key),
+    );
+  }, [listColumns, pruneStaleKeys, table]);
 
   const total = rowsQuery.data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -223,6 +244,7 @@ export function TableBrowser({ table }: TableBrowserProps) {
             <CardDescription>{def.description}</CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
+            <ColumnVisibilityDialog table={table} columns={listColumns} />
             <ManageColumnsDialog
               table={table}
               columns={schemaColumns}
