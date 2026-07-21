@@ -45,7 +45,11 @@ export function DashboardShell({
     return <LoginScreen />;
   }
 
-  const username = auth.data.user?.username ?? null;
+  const userInfos = auth.data.userInfos;
+  const displayName =
+    [userInfos?.fname, userInfos?.lname].filter(Boolean).join(" ").trim() ||
+    userInfos?.username ||
+    null;
 
   return (
     <SidebarProvider className="min-h-dvh">
@@ -63,9 +67,9 @@ export function DashboardShell({
             ) : null}
           </div>
           <div className="ml-auto flex shrink-0 items-center gap-3">
-            {username ? (
+            {displayName ? (
               <p className="hidden truncate text-[15px] text-muted-foreground sm:block">
-                {username}
+                {displayName}
               </p>
             ) : null}
             <Button
@@ -85,6 +89,18 @@ export function DashboardShell({
         <div className="flex flex-1 flex-col gap-4 overflow-auto bg-background p-4 md:p-6">
           {children}
         </div>
+        <footer className="shrink-0 bg-background px-4 py-6 text-center text-sm text-foreground md:px-6">
+          Copyright © 2026 mavrogenis sales - WebApp{" "}
+          <a
+            href="https://nostosenterprises.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-[#415CD6] hover:underline"
+          >
+            BI AI SYS WORKS
+          </a>
+          . All rights reserved.
+        </footer>
       </SidebarInset>
     </SidebarProvider>
   );
