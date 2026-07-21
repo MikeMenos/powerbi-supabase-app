@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import {
   useLayoutEffect,
   useMemo,
@@ -337,11 +337,28 @@ export function TableBrowser({ table }: TableBrowserProps) {
               setSearch(searchInput.trim());
             }}
           >
-            <Input
-              placeholder="Search…"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-            />
+            <div className="relative min-w-0 flex-1">
+              <Input
+                placeholder="Search…"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                className={searchInput ? "pr-9" : undefined}
+              />
+              {searchInput ? (
+                <button
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                  onClick={() => {
+                    setSearchInput("");
+                    setSearch("");
+                    setPage(1);
+                  }}
+                >
+                  <X className="size-4" />
+                </button>
+              ) : null}
+            </div>
             <Button type="submit" variant="outline">
               Search
             </Button>

@@ -156,20 +156,33 @@ export async function listTableRows(input: {
 
   const search = input.search?.trim();
   if (search) {
-    const textColumns = columns
-      .filter(
-        (column) =>
-          column.type === "text" ||
-          column.type === "longtext" ||
-          column.type === "uuid",
-      )
-      .map((column) => column.key);
+    const filters: string[] = [];
 
-    if (textColumns.length > 0) {
-      const orFilter = textColumns
-        .map((key) => `${key}.ilike.%${search}%`)
-        .join(",");
-      query = query.or(orFilter);
+    for (const column of columns) {
+      if (column.type === "text" || column.type === "longtext") {
+        const escaped = search
+          .replace(/\\/g, "\\\\")
+          .replace(/%/g, "\\%")
+          .replace(/_/g, "\\_")
+          .replace(/,/g, "");
+        filters.push(`${column.key}.ilike.%${escaped}%`);
+      }
+    }
+
+    const looksLikeUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        search,
+      );
+    if (looksLikeUuid) {
+      for (const column of columns) {
+        if (column.type === "uuid" || column.type === "fk") {
+          filters.push(`${column.key}.eq.${search}`);
+        }
+      }
+    }
+
+    if (filters.length > 0) {
+      query = query.or(filters.join(","));
     }
   }
 
