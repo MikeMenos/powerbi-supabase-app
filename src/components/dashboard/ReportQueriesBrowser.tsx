@@ -17,12 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useReportQueryTriplets } from "@/hooks/useTables";
 import type { ReportQueryTripletSummary } from "@/lib/reports/queryGrouping";
 import type { ReportQueryType } from "@/lib/reports/types/reportQueries";
@@ -228,19 +223,17 @@ export function ReportQueriesBrowser() {
                   : ""}
               </CardDescription>
               <CardDescription className="flex flex-nowrap items-center gap-1.5">
-                <TripletTypeChips
-                  presentTypes={selectedTriplet.presentTypes}
-                />
+                <TripletTypeChips presentTypes={selectedTriplet.presentTypes} />
               </CardDescription>
             </CardHeader>
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={clearTriplet}
             >
               <ArrowLeft />
-              Change triplet
+              Back
             </Button>
           </CardContent>
         </Card>
