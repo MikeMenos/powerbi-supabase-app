@@ -38,8 +38,29 @@ export const tableKeys = {
     page: number,
     pageSize: number,
     search: string,
-  ) => [...tableKeys.all, "list", table, page, pageSize, search] as const,
+    filters?: Record<string, string>,
+    reportCodeBase?: string,
+  ) =>
+    [
+      ...tableKeys.all,
+      "list",
+      table,
+      page,
+      pageSize,
+      search,
+      filters ?? null,
+      reportCodeBase ?? null,
+    ] as const,
   columns: (table: string) => [...tableKeys.all, "columns", table] as const,
-  fkOptions: (table: string, valueKey = "id", labelKey = "id") =>
-    [...tableKeys.all, "fk-options", table, valueKey, labelKey] as const,
+  fkOptions: (table: string, valueKey = "id", labelKey = "id", descriptionKey = "") =>
+    [
+      ...tableKeys.all,
+      "fk-options",
+      table,
+      valueKey,
+      labelKey,
+      descriptionKey,
+    ] as const,
+  reportQueryTriplets: () =>
+    [...tableKeys.all, "report-query-triplets"] as const,
 };

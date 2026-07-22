@@ -153,7 +153,9 @@ const workbookPagesOverrides: ColumnOverride[] = [
     key: "workbook_id",
     label: "Workbook",
     type: "fk",
+    required: true,
     fkTable: "workbooks",
+    fkValueKey: "id",
     fkLabelKey: "workbook_name",
   },
   {

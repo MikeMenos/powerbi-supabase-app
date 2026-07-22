@@ -1,5 +1,6 @@
 "use client";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -38,7 +39,11 @@ export function ConfirmDeleteDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
         <DialogFooter>
           <Button
             variant="outline"

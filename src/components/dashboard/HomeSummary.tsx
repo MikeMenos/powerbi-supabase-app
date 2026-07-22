@@ -18,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTableSummaries } from "@/hooks/useTables";
 import { TABLE_IDS } from "@/lib/dashboard/tableCatalog";
@@ -81,15 +82,18 @@ export function HomeSummary() {
                   <CardTitle className="text-base">{table.name}</CardTitle>
                   <CardDescription>{table.description}</CardDescription>
                 </div>
-                <div className="rounded-md border border-border bg-background p-2 text-muted-foreground">
+                <Badge
+                  variant="outline"
+                  className="rounded-md border-border bg-background p-2 text-muted-foreground"
+                >
                   <Icon className="size-4" />
-                </div>
+                </Badge>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-semibold tracking-tight">
+                <CardTitle className="text-3xl font-semibold tracking-tight">
                   {table.count.toLocaleString()}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">total rows</p>
+                </CardTitle>
+                <CardDescription className="mt-1">total rows</CardDescription>
               </CardContent>
             </Card>
           </Link>

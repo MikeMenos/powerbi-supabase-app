@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -13,14 +14,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { isColumnVisibilityLocked } from "@/lib/dashboard/columnVisibility";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  isColumnVisibilityLocked,
+  resolveHiddenColumnKeys,
+} from "@/lib/dashboard/columnVisibility";
 import type {
   ColumnDef,
   DashboardTableId,
 } from "@/lib/dashboard/types/tables";
 import {
   useColumnVisibilityStore,
-  useHiddenColumnKeys,
+  useStoredHiddenColumnKeys,
 } from "@/stores/columnVisibilityStore";
 
 type ColumnVisibilityDialogProps = {
@@ -33,7 +44,7 @@ export function ColumnVisibilityDialog({
   columns,
 }: ColumnVisibilityDialogProps) {
   const [open, setOpen] = useState(false);
-  const hiddenKeys = useHiddenColumnKeys(table);
+  const storedHiddenKeys = useStoredHiddenColumnKeys(table);
   const setColumnHidden = useColumnVisibilityStore(
     (state) => state.setColumnHidden,
   );
@@ -41,6 +52,10 @@ export function ColumnVisibilityDialog({
     (state) => state.showAllColumns,
   );
 
+  const hiddenKeys = useMemo(
+    () => resolveHiddenColumnKeys(columns, storedHiddenKeys),
+    [columns, storedHiddenKeys],
+  );
   const hiddenSet = useMemo(() => new Set(hiddenKeys), [hiddenKeys]);
 
   const toggleableColumns = useMemo(
@@ -59,7 +74,7 @@ export function ColumnVisibilityDialog({
           <Eye />
           Show / hide columns
           {hiddenCount > 0 ? (
-            <span className="text-muted-foreground">({hiddenCount} hidden)</span>
+            <Badge variant="secondary">({hiddenCount} hidden)</Badge>
           ) : null}
         </Button>
       </DialogTrigger>
@@ -72,11 +87,11 @@ export function ColumnVisibilityDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">
+        <DialogDescription className="flex items-center justify-between gap-2 !mt-0">
+          <span>
             {toggleableColumns.length - hiddenCount} of{" "}
             {toggleableColumns.length} columns visible
-          </p>
+          </span>
           <Button
             type="button"
             variant="ghost"
@@ -86,47 +101,58 @@ export function ColumnVisibilityDialog({
           >
             Show all
           </Button>
-        </div>
+        </DialogDescription>
 
-        <ul className="divide-y rounded-md border">
-          {columns.map((column) => {
-            const locked = isColumnVisibilityLocked(column);
-            const visible = locked || !hiddenSet.has(column.key);
+        <Table>
+          <TableBody>
+            {columns.map((column) => {
+              const locked = isColumnVisibilityLocked(column);
+              const visible = locked || !hiddenSet.has(column.key);
 
-            return (
-              <li key={column.key}>
-                <label
-                  className={`flex items-start gap-3 px-3 py-2.5 text-sm ${
-                    locked
-                      ? "cursor-not-allowed opacity-70"
-                      : "cursor-pointer hover:bg-muted/50"
-                  }`}
-                >
-                  <Checkbox
-                    checked={visible}
-                    disabled={locked}
-                    onChange={(event) =>
-                      setColumnHidden(table, column.key, !event.target.checked)
-                    }
-                    className="mt-0.5"
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2 font-medium">
-                      {column.label}
-                      {!visible ? (
-                        <EyeOff className="size-3.5 text-muted-foreground" />
-                      ) : null}
-                    </span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {column.key}
-                      {locked ? " · always visible" : ""}
-                    </span>
-                  </span>
-                </label>
-              </li>
-            );
-          })}
-        </ul>
+              return (
+                <TableRow key={column.key}>
+                  <TableCell>
+                    <Label
+                      className={`flex items-start gap-3 ${
+                        locked
+                          ? "cursor-not-allowed opacity-70"
+                          : "cursor-pointer"
+                      }`}
+                    >
+                      <Checkbox
+                        checked={visible}
+                        disabled={locked}
+                        onChange={(event) =>
+                          setColumnHidden(
+                            table,
+                            column.key,
+                            !event.target.checked,
+                            storedHiddenKeys === undefined
+                              ? { seedIfUnset: hiddenKeys }
+                              : undefined,
+                          )
+                        }
+                        className="mt-0.5"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2 font-medium">
+                          {column.label}
+                          {!visible ? (
+                            <EyeOff className="size-3.5 text-muted-foreground" />
+                          ) : null}
+                        </span>
+                        <DialogDescription className="truncate">
+                          {column.key}
+                          {locked ? " · always visible" : ""}
+                        </DialogDescription>
+                      </span>
+                    </Label>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       </DialogContent>
     </Dialog>
   );

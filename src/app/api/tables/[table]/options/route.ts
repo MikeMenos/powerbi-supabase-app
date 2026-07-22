@@ -22,6 +22,7 @@ export async function GET(request: Request, context: RouteContext) {
     const options = await listFkOptions(table, {
       valueKey: searchParams.get("valueKey") ?? undefined,
       labelKey: searchParams.get("labelKey") ?? undefined,
+      descriptionKey: searchParams.get("descriptionKey") ?? undefined,
     });
     return NextResponse.json({ ok: true, options });
   } catch (error) {

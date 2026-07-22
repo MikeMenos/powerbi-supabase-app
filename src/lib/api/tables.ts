@@ -1,4 +1,5 @@
 import { apiClient, unwrapApiResponse } from "@/lib/api/client";
+import type { ReportQueryTripletSummary } from "@/lib/reports/queryGrouping";
 import type {
   AddColumnRequest,
   ColumnDef,
@@ -26,7 +27,16 @@ export async function fetchTableRows(input: {
   page?: number;
   pageSize?: number;
   search?: string;
+  filters?: Record<string, string>;
+  reportCodeBase?: string;
 }) {
+  const eqParams = Object.fromEntries(
+    Object.entries(input.filters ?? {}).map(([key, value]) => [
+      `eq.${key}`,
+      value,
+    ]),
+  );
+
   const response = await apiClient.get<TableListResponse>(
     `/api/tables/${input.table}`,
     {
@@ -34,6 +44,8 @@ export async function fetchTableRows(input: {
         page: input.page,
         pageSize: input.pageSize,
         search: input.search || undefined,
+        reportCodeBase: input.reportCodeBase || undefined,
+        ...eqParams,
       },
       headers: { "Cache-Control": "no-store" },
     },
@@ -110,7 +122,11 @@ export async function deleteTableRowRequest(
 
 export async function fetchFkOptions(
   table: DashboardTableId,
-  options?: { valueKey?: string; labelKey?: string },
+  options?: {
+    valueKey?: string;
+    labelKey?: string;
+    descriptionKey?: string;
+  },
 ) {
   const response = await apiClient.get<{ ok: true; options: FkOption[] }>(
     `/api/tables/${table}/options`,
@@ -118,6 +134,7 @@ export async function fetchFkOptions(
       params: {
         valueKey: options?.valueKey,
         labelKey: options?.labelKey,
+        descriptionKey: options?.descriptionKey,
       },
       headers: { "Cache-Control": "no-store" },
     },
@@ -125,4 +142,13 @@ export async function fetchFkOptions(
   return unwrapApiResponse(response, "Failed to load options.").options;
 }
 
-export type { TableRow };
+export async function fetchReportQueryTriplets() {
+  const response = await apiClient.get<{
+    ok: true;
+    triplets: ReportQueryTripletSummary[];
+  }>("/api/dashboard/report-query-triplets", {
+    headers: { "Cache-Control": "no-store" },
+  });
+  return unwrapApiResponse(response, "Failed to load report query triplets.")
+    .triplets;
+}

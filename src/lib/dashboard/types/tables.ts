@@ -91,6 +91,8 @@ export type TableMutationResponse = {
 export type FkOption = {
   id: string;
   label: string;
+  /** Optional secondary text (e.g. business workbook_id). */
+  description?: string;
 };
 
 export type AddColumnRequest = {

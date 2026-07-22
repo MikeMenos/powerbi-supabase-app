@@ -14,6 +14,7 @@ import { ColumnVisibilityDialog } from "@/components/dashboard/ColumnVisibilityD
 import { ConfirmDeleteDialog } from "@/components/dashboard/ConfirmDeleteDialog";
 import { ManageColumnsDialog } from "@/components/dashboard/ManageColumnsDialog";
 import { RowFormDialog } from "@/components/dashboard/RowFormDialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,7 +49,10 @@ import {
   useUpdateTableRow,
 } from "@/hooks/useTables";
 import { getApiErrorMessage } from "@/lib/api/client";
-import { filterVisibleListColumns } from "@/lib/dashboard/columnVisibility";
+import {
+  filterVisibleListColumns,
+  resolveHiddenColumnKeys,
+} from "@/lib/dashboard/columnVisibility";
 import {
   encodeCompositeRowKey,
   getListColumnsFromDefs,
@@ -60,7 +64,10 @@ import type {
   TableRow,
 } from "@/lib/dashboard/types/tables";
 import { formatDateDdMmYyyy, formatDateTimeDdMmYyyyHm } from "@/lib/utils";
-import { useColumnVisibilityStore, useHiddenColumnKeys } from "@/stores/columnVisibilityStore";
+import {
+  useColumnVisibilityStore,
+  useStoredHiddenColumnKeys,
+} from "@/stores/columnVisibilityStore";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 25;
@@ -168,9 +175,33 @@ function getDeleteKey(
 
 type TableBrowserProps = {
   table: DashboardTableId;
+  /** Equality filters applied to the list query (e.g. workbook_id). */
+  filters?: Record<string, string>;
+  /** For report_queries: limit rows to one triplet report_code base. */
+  reportCodeBase?: string;
+  /** Prefill create-form values (merged into submit payload). */
+  defaultCreateValues?: Record<string, unknown>;
+  /** Columns always omitted from the list (still editable in forms unless omitted there). */
+  forceHiddenColumns?: string[];
+  /** Form fields hidden but still submitted from defaultCreateValues / row. */
+  omitFormFields?: string[];
+  /** Optional chrome above the search/toolbar area. */
+  toolbarStart?: ReactNode;
+  title?: string;
+  description?: string;
 };
 
-export function TableBrowser({ table }: TableBrowserProps) {
+export function TableBrowser({
+  table,
+  filters,
+  reportCodeBase,
+  defaultCreateValues,
+  forceHiddenColumns,
+  omitFormFields,
+  toolbarStart,
+  title,
+  description,
+}: TableBrowserProps) {
   const def = getTableDef(table);
   const columnsQuery = useTableColumns(table);
   const canCreate = def.canCreate !== false;
@@ -190,13 +221,28 @@ export function TableBrowser({ table }: TableBrowserProps) {
   const [deleteRow, setDeleteRow] = useState<TableRow | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const rowsQuery = useTableRows(table, { page, pageSize: PAGE_SIZE, search });
+  const filterKey = useMemo(
+    () => JSON.stringify({ filters: filters ?? null, reportCodeBase: reportCodeBase ?? null }),
+    [filters, reportCodeBase],
+  );
+
+  useEffect(() => {
+    setPage(1);
+    setSearch("");
+    setSearchInput("");
+  }, [filterKey]);
+
+  const rowsQuery = useTableRows(
+    table,
+    { page, pageSize: PAGE_SIZE, search, filters, reportCodeBase },
+    true,
+  );
   const createRow = useCreateTableRow(table);
   const updateRow = useUpdateTableRow(table);
   const removeRow = useDeleteTableRow(table);
   const refreshTable = useRefreshTable(table);
 
-  const hiddenKeys = useHiddenColumnKeys(table);
+  const storedHiddenKeys = useStoredHiddenColumnKeys(table);
   const pruneStaleKeys = useColumnVisibilityStore(
     (state) => state.pruneStaleKeys,
   );
@@ -209,6 +255,15 @@ export function TableBrowser({ table }: TableBrowserProps) {
     () => getListColumnsFromDefs(schemaColumns),
     [schemaColumns],
   );
+  const forceHiddenSet = useMemo(
+    () => new Set(forceHiddenColumns ?? []),
+    [forceHiddenColumns],
+  );
+  const hiddenKeys = useMemo(() => {
+    const resolved = resolveHiddenColumnKeys(listColumns, storedHiddenKeys);
+    if (forceHiddenSet.size === 0) return resolved;
+    return Array.from(new Set([...resolved, ...forceHiddenSet]));
+  }, [listColumns, storedHiddenKeys, forceHiddenSet]);
   const displayColumns = useMemo(
     () => filterVisibleListColumns(listColumns, hiddenKeys),
     [listColumns, hiddenKeys],
@@ -252,7 +307,10 @@ export function TableBrowser({ table }: TableBrowserProps) {
     try {
       if (formMode === "create") {
         if (!canCreate) throw new Error("Create is disabled for this table.");
-        await createRow.mutateAsync(values);
+        await createRow.mutateAsync({
+          ...defaultCreateValues,
+          ...values,
+        });
         toast.success("Row created");
       } else {
         if (!canEdit) throw new Error("Edit is disabled for this table.");
@@ -299,8 +357,8 @@ export function TableBrowser({ table }: TableBrowserProps) {
       <Card>
         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1.5">
-            <CardTitle>{def.name}</CardTitle>
-            <CardDescription>{def.description}</CardDescription>
+            <CardTitle>{title ?? def.name}</CardTitle>
+            <CardDescription>{description ?? def.description}</CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -316,7 +374,12 @@ export function TableBrowser({ table }: TableBrowserProps) {
               <RefreshCw className={isRefreshing ? "animate-spin" : undefined} />
               Refresh
             </Button>
-            <ColumnVisibilityDialog table={table} columns={listColumns} />
+            <ColumnVisibilityDialog
+              table={table}
+              columns={listColumns.filter(
+                (column) => !forceHiddenSet.has(column.key),
+              )}
+            />
             {canManageColumns ? (
               <ManageColumnsDialog
                 table={table}
@@ -333,14 +396,20 @@ export function TableBrowser({ table }: TableBrowserProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {toolbarStart}
+
           {canManageColumns && columnsQuery.data?.schemaRpcReady === false ? (
-            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              {columnsQuery.data.schemaRpcHint ??
-                "Schema RPCs are missing. Run the dashboard schema migration in Supabase to enable add/delete column."}
-            </p>
+            <Alert variant="default" className="border-amber-200 bg-amber-50 text-amber-900">
+              <AlertDescription>
+                {columnsQuery.data.schemaRpcHint ??
+                  "Schema RPCs are missing. Run the dashboard schema migration in Supabase to enable add/delete column."}
+              </AlertDescription>
+            </Alert>
           ) : null}
           {columnsError ? (
-            <p className="text-sm text-destructive">{columnsError}</p>
+            <Alert variant="destructive">
+              <AlertDescription>{columnsError}</AlertDescription>
+            </Alert>
           ) : null}
 
           <form
@@ -359,9 +428,11 @@ export function TableBrowser({ table }: TableBrowserProps) {
                 className={searchInput ? "pr-9" : undefined}
               />
               {searchInput ? (
-                <button
+                <Button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:text-foreground"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 size-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   aria-label="Clear search"
                   onClick={() => {
                     setSearchInput("");
@@ -370,7 +441,7 @@ export function TableBrowser({ table }: TableBrowserProps) {
                   }}
                 >
                   <X className="size-4" />
-                </button>
+                </Button>
               ) : null}
             </div>
             <Button type="submit" variant="outline">
@@ -378,7 +449,8 @@ export function TableBrowser({ table }: TableBrowserProps) {
             </Button>
           </form>
 
-          <div className="rounded-md border">
+          <Card className="overflow-hidden py-0">
+            <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <UiTableRow>
@@ -485,14 +557,15 @@ export function TableBrowser({ table }: TableBrowserProps) {
                 )}
               </TableBody>
             </Table>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-            <p>
+          <CardDescription className="flex items-center justify-between gap-3 !mt-0">
+            <span>
               {total.toLocaleString()} row{total === 1 ? "" : "s"}
               {search ? ` matching “${search}”` : ""}
-            </p>
-            <div className="flex items-center gap-2">
+            </span>
+            <span className="flex items-center gap-2 text-foreground">
               <Button
                 variant="outline"
                 size="sm"
@@ -514,8 +587,8 @@ export function TableBrowser({ table }: TableBrowserProps) {
               >
                 Next
               </Button>
-            </div>
-          </div>
+            </span>
+          </CardDescription>
         </CardContent>
       </Card>
 
@@ -528,6 +601,8 @@ export function TableBrowser({ table }: TableBrowserProps) {
           row={selectedRow}
           pending={createRow.isPending || updateRow.isPending}
           error={formError}
+          defaultValues={formMode === "create" ? defaultCreateValues : undefined}
+          omitFields={omitFormFields}
           onOpenChange={setFormOpen}
           onSubmit={handleSubmit}
         />

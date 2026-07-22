@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 
 import logo from "@/assets/logo.png";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -96,7 +97,11 @@ export function LoginScreen() {
                   </Button>
                 </div>
               </div>
-              {error ? <p className="text-sm text-destructive">{error}</p> : null}
+              {error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              ) : null}
               <Button
                 type="submit"
                 disabled={

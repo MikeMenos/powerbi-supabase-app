@@ -12,6 +12,7 @@ type ColumnVisibilityState = {
     table: DashboardTableId,
     columnKey: string,
     hidden: boolean,
+    options?: { seedIfUnset?: string[] },
   ) => void;
   toggleColumn: (table: DashboardTableId, columnKey: string) => void;
   showAllColumns: (table: DashboardTableId) => void;
@@ -20,6 +21,18 @@ type ColumnVisibilityState = {
 
 const EMPTY_HIDDEN_KEYS: string[] = [];
 
+/**
+ * Returns the persisted preference for a table, or `undefined` when the user
+ * has never customized visibility (so callers can apply defaults).
+ */
+export function selectStoredHiddenKeysForTable(
+  state: ColumnVisibilityState,
+  table: DashboardTableId,
+): string[] | undefined {
+  return state.hiddenByTable[table];
+}
+
+/** @deprecated Prefer selectStoredHiddenKeysForTable + resolveHiddenColumnKeys. */
 export function selectHiddenKeysForTable(
   state: ColumnVisibilityState,
   table: DashboardTableId,
@@ -27,6 +40,13 @@ export function selectHiddenKeysForTable(
   return state.hiddenByTable[table] ?? EMPTY_HIDDEN_KEYS;
 }
 
+export function useStoredHiddenColumnKeys(table: DashboardTableId) {
+  return useColumnVisibilityStore((state) =>
+    selectStoredHiddenKeysForTable(state, table),
+  );
+}
+
+/** @deprecated Prefer useStoredHiddenColumnKeys + resolveHiddenColumnKeys. */
 export function useHiddenColumnKeys(table: DashboardTableId) {
   return useColumnVisibilityStore((state) =>
     selectHiddenKeysForTable(state, table),
@@ -48,9 +68,12 @@ export const useColumnVisibilityStore = create<ColumnVisibilityState>()(
       isColumnHidden: (table, columnKey) =>
         getHiddenSet(get().hiddenByTable, table).has(columnKey),
 
-      setColumnHidden: (table, columnKey, hidden) => {
+      setColumnHidden: (table, columnKey, hidden, options) => {
         set((state) => {
-          const nextHidden = new Set(getHiddenSet(state.hiddenByTable, table));
+          const stored = state.hiddenByTable[table];
+          const nextHidden = new Set(
+            stored === undefined ? (options?.seedIfUnset ?? []) : stored,
+          );
           if (hidden) {
             nextHidden.add(columnKey);
           } else {
@@ -83,7 +106,9 @@ export const useColumnVisibilityStore = create<ColumnVisibilityState>()(
       pruneStaleKeys: (table, validKeys) => {
         const validSet = new Set(validKeys);
         set((state) => {
-          const current = state.hiddenByTable[table] ?? [];
+          const current = state.hiddenByTable[table];
+          if (current === undefined) return state;
+
           const pruned = current.filter((key) => validSet.has(key));
           if (pruned.length === current.length) return state;
 

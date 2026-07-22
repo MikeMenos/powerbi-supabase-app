@@ -97,3 +97,85 @@ export function describeIncompleteQueryGroups(
     )
     .join("; ");
 }
+
+export type ReportQueryTripletSummary = {
+  key: string;
+  pageCode: string;
+  reportBase: string;
+  reportPage: string | null;
+  presentTypes: ReportQueryType[];
+  missingTypes: ReportQueryType[];
+  complete: boolean;
+  queryCount: number;
+};
+
+/** Group raw report_queries rows into triplet summaries for the dashboard UI. */
+export function summarizeReportQueryTriplets(
+  rows: Array<Record<string, unknown>>,
+): ReportQueryTripletSummary[] {
+  const grouped = new Map<
+    string,
+    {
+      pageCode: string;
+      reportBase: string;
+      reportPage: string | null;
+      present: Set<ReportQueryType>;
+      queryCount: number;
+    }
+  >();
+
+  for (const row of rows) {
+    const reportCode = String(row.report_code ?? "");
+    if (!reportCode) continue;
+
+    const reportType = normalizeReportQueryType(
+      String(row.report_type ?? ""),
+      reportCode,
+    );
+    if (!reportType) continue;
+
+    const reportBase = getReportCodeBase(reportCode);
+    const pageCode = row.page_code == null ? "" : String(row.page_code);
+    const key = `${pageCode}::${reportBase}`;
+    const existing = grouped.get(key) ?? {
+      pageCode,
+      reportBase,
+      reportPage:
+        row.report_page == null ? null : String(row.report_page),
+      present: new Set<ReportQueryType>(),
+      queryCount: 0,
+    };
+
+    existing.present.add(reportType);
+    existing.queryCount += 1;
+    if (!existing.reportPage && row.report_page != null) {
+      existing.reportPage = String(row.report_page);
+    }
+    grouped.set(key, existing);
+  }
+
+  return [...grouped.values()]
+    .map((group) => {
+      const presentTypes = REPORT_QUERY_TYPES.filter((type) =>
+        group.present.has(type),
+      );
+      const missingTypes = REPORT_QUERY_TYPES.filter(
+        (type) => !group.present.has(type),
+      );
+      return {
+        key: `${group.pageCode}::${group.reportBase}`,
+        pageCode: group.pageCode,
+        reportBase: group.reportBase,
+        reportPage: group.reportPage,
+        presentTypes,
+        missingTypes,
+        complete: missingTypes.length === 0,
+        queryCount: group.queryCount,
+      } satisfies ReportQueryTripletSummary;
+    })
+    .sort((a, b) => {
+      const pageCompare = a.pageCode.localeCompare(b.pageCode);
+      if (pageCompare !== 0) return pageCompare;
+      return a.reportBase.localeCompare(b.reportBase);
+    });
+}

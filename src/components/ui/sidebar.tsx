@@ -310,9 +310,10 @@ const SidebarRail = React.forwardRef<
   const { toggleSidebar } = useSidebar();
 
   return (
-    <button
+    <Button
       ref={ref}
       data-sidebar="rail"
+      variant="ghost"
       aria-label="Toggle Sidebar"
       tabIndex={-1}
       onClick={toggleSidebar}
@@ -324,6 +325,7 @@ const SidebarRail = React.forwardRef<
         "group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full group-data-[collapsible=offcanvas]:hover:bg-sidebar",
         "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",
         "[[data-side=right][data-collapsible=offcanvas]_&]:-left-2",
+        "h-auto rounded-none p-0 hover:bg-transparent",
         className,
       )}
       {...props}

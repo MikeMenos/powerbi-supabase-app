@@ -16,6 +16,7 @@ import type {
   TableRow,
   TableSummaryItem,
 } from "@/lib/dashboard/types/tables";
+import { summarizeReportQueryTriplets } from "@/lib/reports/queryGrouping";
 import { createSupabaseAdminClient } from "@/lib/supabase";
 
 const DEFAULT_PAGE_SIZE = 25;
@@ -132,10 +133,14 @@ export async function listTableRows(input: {
   page?: number;
   pageSize?: number;
   search?: string;
+  filters?: Record<string, string>;
+  /** For report_queries: match report_code values for one triplet base. */
+  reportCodeBase?: string;
 }) {
   const supabase = createSupabaseAdminClient();
   const def = getTableDef(input.table);
   const columns = await listLiveColumns(input.table);
+  const columnKeys = new Set(columns.map((column) => column.key));
   const page = input.page && input.page > 0 ? input.page : 1;
   const pageSize =
     input.pageSize && input.pageSize > 0
@@ -153,6 +158,27 @@ export async function listTableRows(input: {
     query = query.order(def.defaultOrderBy.column, {
       ascending: def.defaultOrderBy.ascending ?? true,
     });
+  }
+
+  if (input.filters) {
+    for (const [key, value] of Object.entries(input.filters)) {
+      if (!columnKeys.has(key)) continue;
+      if (value === "") {
+        query = query.or(`${key}.is.null,${key}.eq.""`);
+        continue;
+      }
+      if (!value) continue;
+      query = query.eq(key, value);
+    }
+  }
+
+  const reportCodeBase = input.reportCodeBase?.trim();
+  if (input.table === "report_queries" && reportCodeBase) {
+    const escaped = reportCodeBase
+      .replace(/\\/g, "\\\\")
+      .replace(/%/g, "\\%")
+      .replace(/_/g, "\\_");
+    query = query.ilike("report_code", `${escaped}-%`);
   }
 
   const search = input.search?.trim();
@@ -279,7 +305,11 @@ export async function deleteTableRow(table: DashboardTableId, id: string) {
 
 export async function listFkOptions(
   table: DashboardTableId,
-  options?: { valueKey?: string; labelKey?: string },
+  options?: {
+    valueKey?: string;
+    labelKey?: string;
+    descriptionKey?: string;
+  },
 ): Promise<FkOption[]> {
   const valueKey = options?.valueKey?.trim() || "id";
   const resolvedLabelKey = options?.labelKey?.trim()
@@ -293,6 +323,7 @@ export async function listFkOptions(
           : table === "powerbi_groups" || table === "powerbi_datasets"
             ? "name"
             : valueKey;
+  const descriptionKey = options?.descriptionKey?.trim() || undefined;
 
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
@@ -309,12 +340,47 @@ export async function listFkOptions(
     .map((row) => {
       const id = row[valueKey];
       if (id == null) return null;
-      return {
+      const option: FkOption = {
         id: String(id),
         label: String(row[resolvedLabelKey] ?? id),
       };
+      if (descriptionKey && row[descriptionKey] != null) {
+        option.description = String(row[descriptionKey]);
+      }
+      return option;
     })
     .filter((option): option is FkOption => option != null);
+}
+
+export async function listReportQueryTriplets() {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("report_queries")
+    .select(
+      "id, page_code, report_code, report_type, report_page, report_page_desc",
+    )
+    .order("page_code", { ascending: true })
+    .order("report_code", { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to list report query triplets: ${error.message}`);
+  }
+
+  return summarizeReportQueryTriplets((data ?? []) as TableRow[]);
+}
+
+export function parseEqFilters(
+  searchParams: URLSearchParams,
+): Record<string, string> | undefined {
+  const filters: Record<string, string> = {};
+  for (const [key, value] of searchParams.entries()) {
+    if (!key.startsWith("eq.")) continue;
+    const column = key.slice(3).trim();
+    if (!column) continue;
+    // Empty string is meaningful (match null/empty column values).
+    filters[column] = value.trim();
+  }
+  return Object.keys(filters).length > 0 ? filters : undefined;
 }
 
 export function parseListQuery(searchParams: URLSearchParams) {
@@ -322,5 +388,7 @@ export function parseListQuery(searchParams: URLSearchParams) {
     page: parsePage(searchParams.get("page")),
     pageSize: parsePageSize(searchParams.get("pageSize")),
     search: searchParams.get("search")?.trim() || undefined,
+    filters: parseEqFilters(searchParams),
+    reportCodeBase: searchParams.get("reportCodeBase")?.trim() || undefined,
   };
 }

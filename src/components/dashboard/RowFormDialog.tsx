@@ -16,6 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
 import { tableKeys } from "@/hooks/queryKeys";
 import { fetchFkOptions } from "@/lib/api/tables";
 import { getFormColumnsFromDefs } from "@/lib/dashboard/tableCatalog";
@@ -34,11 +36,17 @@ type RowFormDialogProps = {
   row: TableRow | null;
   pending?: boolean;
   error?: string | null;
+  defaultValues?: Record<string, unknown>;
+  omitFields?: string[];
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void;
 };
 
-function defaultValue(column: ColumnDef, row: TableRow | null) {
+function defaultValue(
+  column: ColumnDef,
+  row: TableRow | null,
+  defaults?: Record<string, unknown>,
+) {
   if (row && row[column.key] != null) {
     const value = row[column.key];
     if (column.type === "boolean") return Boolean(value);
@@ -48,14 +56,22 @@ function defaultValue(column: ColumnDef, row: TableRow | null) {
     return value;
   }
 
+  if (defaults && defaults[column.key] != null) {
+    return defaults[column.key];
+  }
+
   if (column.type === "boolean") return true;
   return "";
 }
 
-function buildInitialValues(columns: ColumnDef[], row: TableRow | null) {
+function buildInitialValues(
+  columns: ColumnDef[],
+  row: TableRow | null,
+  defaults?: Record<string, unknown>,
+) {
   const next: Record<string, unknown> = {};
   for (const column of columns) {
-    next[column.key] = defaultValue(column, row);
+    next[column.key] = defaultValue(column, row, defaults);
   }
   return next;
 }
@@ -83,13 +99,13 @@ function FieldControl({
 }) {
   if (column.type === "boolean") {
     return (
-      <label className="flex items-center gap-2 text-sm">
+      <Label className="flex cursor-pointer items-center gap-2 font-normal">
         <Checkbox
           checked={Boolean(value)}
           onChange={(event) => onChange(event.target.checked)}
         />
         {column.label}
-      </label>
+      </Label>
     );
   }
 
@@ -113,8 +129,7 @@ function FieldControl({
 
   if (column.type === "longtext") {
     return (
-      <textarea
-        className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+      <Textarea
         value={value == null ? "" : String(value)}
         onChange={(event) => onChange(event.target.value)}
         required={column.required}
@@ -147,6 +162,8 @@ function RowFormFields({
   columns: allColumns,
   pending,
   error,
+  defaultValues,
+  omitFields,
   onCancel,
   onSubmit,
 }: {
@@ -155,12 +172,18 @@ function RowFormFields({
   columns: ColumnDef[];
   pending?: boolean;
   error?: string | null;
+  defaultValues?: Record<string, unknown>;
+  omitFields?: string[];
   onCancel: () => void;
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void;
 }) {
+  const omitted = useMemo(() => new Set(omitFields ?? []), [omitFields]);
   const columns = useMemo(
-    () => getFormColumnsFromDefs(allColumns, mode),
-    [allColumns, mode],
+    () =>
+      getFormColumnsFromDefs(allColumns, mode).filter(
+        (column) => !omitted.has(column.key),
+      ),
+    [allColumns, mode, omitted],
   );
   const fkColumns = useMemo(
     () => columns.filter((column) => column.type === "fk" && column.fkTable),
@@ -198,11 +221,21 @@ function RowFormFields({
     return map;
   }, [fkColumns, fkQueries]);
 
-  const [values, setValues] = useState(() => buildInitialValues(columns, row));
+  const [values, setValues] = useState(() =>
+    buildInitialValues(columns, row, defaultValues),
+  );
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    await onSubmit(values);
+    const omittedValues: Record<string, unknown> = {};
+    for (const key of omitted) {
+      if (defaultValues && defaultValues[key] != null) {
+        omittedValues[key] = defaultValues[key];
+      } else if (row && row[key] != null) {
+        omittedValues[key] = row[key];
+      }
+    }
+    await onSubmit({ ...omittedValues, ...values });
   }
 
   return (
@@ -237,7 +270,11 @@ function RowFormFields({
         );
       })}
 
-      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <DialogFooter>
         <Button
@@ -267,6 +304,8 @@ export function RowFormDialog({
   row,
   pending,
   error,
+  defaultValues,
+  omitFields,
   onOpenChange,
   onSubmit,
 }: RowFormDialogProps) {
@@ -294,6 +333,8 @@ export function RowFormDialog({
             row={row}
             pending={pending}
             error={error}
+            defaultValues={defaultValues}
+            omitFields={omitFields}
             onCancel={() => onOpenChange(false)}
             onSubmit={onSubmit}
           />
