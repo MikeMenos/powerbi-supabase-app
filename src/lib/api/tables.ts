@@ -103,7 +103,7 @@ export async function deleteTableRowRequest(
   id: string,
 ) {
   const response = await apiClient.delete<{ ok: true }>(
-    `/api/tables/${table}/${id}`,
+    `/api/tables/${table}/${encodeURIComponent(id)}`,
   );
   return unwrapApiResponse(response, "Failed to delete row.");
 }

@@ -50,13 +50,16 @@ import {
 import { getApiErrorMessage } from "@/lib/api/client";
 import { filterVisibleListColumns } from "@/lib/dashboard/columnVisibility";
 import {
+  encodeCompositeRowKey,
   getListColumnsFromDefs,
   getTableDef,
 } from "@/lib/dashboard/tableCatalog";
 import type {
+  ColumnType,
   DashboardTableId,
   TableRow,
 } from "@/lib/dashboard/types/tables";
+import { formatDateDdMmYyyy, formatDateTimeDdMmYyyyHm } from "@/lib/utils";
 import { useColumnVisibilityStore, useHiddenColumnKeys } from "@/stores/columnVisibilityStore";
 import { toast } from "sonner";
 
@@ -113,7 +116,17 @@ function TruncatedCellValue({ text }: { text: string }) {
   );
 }
 
-function formatCell(value: unknown): ReactNode {
+function formatCellValue(value: unknown, type?: ColumnType): string {
+  if (type === "date") {
+    return formatDateDdMmYyyy(value) ?? String(value);
+  }
+  if (type === "datetime") {
+    return formatDateTimeDdMmYyyyHm(value) ?? String(value);
+  }
+  return String(value);
+}
+
+function formatCell(value: unknown, type?: ColumnType): ReactNode {
   if (value == null) {
     return <span className="text-muted-foreground">—</span>;
   }
@@ -126,7 +139,7 @@ function formatCell(value: unknown): ReactNode {
     );
   }
 
-  return <TruncatedCellValue text={String(value)} />;
+  return <TruncatedCellValue text={formatCellValue(value, type)} />;
 }
 
 function getRowKey(
@@ -136,14 +149,21 @@ function getRowKey(
 ) {
   if (row.id != null) return String(row.id);
   if (rowKeyColumns?.length) {
-    const composite = rowKeyColumns
-      .map((key) => row[key])
-      .filter((value) => value != null)
-      .map(String)
-      .join("|");
+    const composite = encodeCompositeRowKey(row, rowKeyColumns);
     if (composite) return composite;
   }
   return fallback;
+}
+
+function getDeleteKey(
+  row: TableRow,
+  rowKeyColumns: string[] | undefined,
+): string | null {
+  if (row.id != null) return String(row.id);
+  if (rowKeyColumns?.length) {
+    return encodeCompositeRowKey(row, rowKeyColumns);
+  }
+  return null;
 }
 
 type TableBrowserProps = {
@@ -247,12 +267,16 @@ export function TableBrowser({ table }: TableBrowserProps) {
   }
 
   async function handleDelete() {
-    if (!deleteRow?.id || !canDelete) return;
+    if (!deleteRow || !canDelete) return;
+    const deleteKey = getDeleteKey(deleteRow, def.rowKeyColumns);
+    if (!deleteKey) return;
     setDeleteError(null);
     try {
-      await removeRow.mutateAsync(String(deleteRow.id));
+      await removeRow.mutateAsync(deleteKey);
       setDeleteRow(null);
-      toast.success("Row deleted");
+      toast.success(
+        table === "v_available_snapshots" ? "Snapshot deleted" : "Row deleted",
+      );
     } catch (error) {
       setDeleteError(getApiErrorMessage(error, "Delete failed."));
     }
@@ -260,17 +284,7 @@ export function TableBrowser({ table }: TableBrowserProps) {
 
   async function handleRefresh() {
     try {
-      const result = await refreshTable.mutateAsync();
-      if (result) {
-        const added = result.groupsAdded + result.datasetsAdded;
-        toast.success(
-          added > 0
-            ? `Synced ${result.groupsAdded} new group${result.groupsAdded === 1 ? "" : "s"} and ${result.datasetsAdded} new dataset${result.datasetsAdded === 1 ? "" : "s"}.`
-            : "Power BI catalog is up to date.",
-        );
-      } else {
-        toast.success("Table refreshed");
-      }
+      await refreshTable.mutateAsync();
     } catch (error) {
       toast.error(getApiErrorMessage(error, "Refresh failed."));
     }
@@ -430,7 +444,7 @@ export function TableBrowser({ table }: TableBrowserProps) {
                     >
                       {displayColumns.map((column) => (
                         <TableCell key={column.key} className="max-w-[14rem]">
-                          {formatCell(row[column.key])}
+                          {formatCell(row[column.key], column.type)}
                         </TableCell>
                       ))}
                       {showActions ? (
@@ -454,7 +468,11 @@ export function TableBrowser({ table }: TableBrowserProps) {
                                   setDeleteError(null);
                                   setDeleteRow(row);
                                 }}
-                                aria-label="Delete row"
+                                aria-label={
+                                  table === "v_available_snapshots"
+                                    ? "Delete snapshot"
+                                    : "Delete row"
+                                }
                               >
                                 <Trash2 />
                               </Button>
@@ -517,9 +535,23 @@ export function TableBrowser({ table }: TableBrowserProps) {
 
       <ConfirmDeleteDialog
         open={Boolean(deleteRow)}
-        description={`This permanently deletes the row${
-          deleteRow?.id ? ` ${String(deleteRow.id)}` : ""
-        }. Related foreign keys may block the delete.`}
+        title={
+          table === "v_available_snapshots" ? "Delete snapshot" : "Delete row"
+        }
+        description={
+          table === "v_available_snapshots"
+            ? `This permanently deletes all sales snapshot rows for ${[
+                deleteRow?.area,
+                deleteRow?.page_code,
+                deleteRow?.year,
+                deleteRow?.snapshot_date,
+              ]
+                .filter((value) => value != null)
+                .join(" / ")}.`
+            : `This permanently deletes the row${
+                deleteRow?.id ? ` ${String(deleteRow.id)}` : ""
+              }. Related foreign keys may block the delete.`
+        }
         pending={removeRow.isPending}
         error={deleteError}
         onOpenChange={(open) => {

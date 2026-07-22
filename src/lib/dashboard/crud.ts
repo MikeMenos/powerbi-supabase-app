@@ -4,6 +4,7 @@ import {
   getTableDef,
   isDashboardTableId,
   isNonEditableIdentityColumn,
+  parseCompositeRowKey,
   TABLE_CATALOG,
   TABLE_IDS,
 } from "@/lib/dashboard/tableCatalog";
@@ -242,6 +243,33 @@ export async function updateTableRow(
 
 export async function deleteTableRow(table: DashboardTableId, id: string) {
   const supabase = createSupabaseAdminClient();
+
+  if (table === "v_available_snapshots") {
+    const def = getTableDef(table);
+    const columns = def.rowKeyColumns ?? [];
+    const filters = parseCompositeRowKey(id, columns);
+    if (!filters) {
+      throw new Error("Invalid available snapshot key.");
+    }
+
+    let query = supabase.from("sales_snapshots").delete();
+    for (const column of columns) {
+      const value = filters[column]!;
+      query =
+        column === "year"
+          ? query.eq(column, Number(value))
+          : query.eq(column, value);
+    }
+
+    const { error } = await query;
+    if (error) {
+      throw new Error(
+        `Failed to delete snapshot rows: ${error.message}`,
+      );
+    }
+    return;
+  }
+
   const { error } = await supabase.from(table).delete().eq("id", id);
 
   if (error) {
